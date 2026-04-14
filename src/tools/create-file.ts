@@ -11,8 +11,9 @@ import { createEditorConfig } from "../utils/editor-config.js";
 const FILE_TYPES = ["docx", "xlsx", "pptx"] as const;
 const fileTypeSchema = z.enum(FILE_TYPES);
 
-function getTemplateUrl(fileType: z.infer<typeof fileTypeSchema>): string {
-  return `https://static.onlyoffice.com/assets/docs/samples/new.${fileType}`;
+function getTemplateUrl(fileType: z.infer<typeof fileTypeSchema>, locale?: string): string {
+  const localePath = locale ? `/${locale}` : "";
+  return `https://static.onlyoffice.com/assets/docs/samples/${localePath}/new.${fileType}`;
 }
 
 function getFileName(fileName: string, fileType: z.infer<typeof fileTypeSchema>): string {
@@ -30,17 +31,18 @@ export const createFile: McpTool = {
         inputSchema: {
           fileName: z.string().describe("Name for the new file, with or without extension (e.g. 'My Report')."),
           fileType: fileTypeSchema.describe("Document type: 'docx' for text document, 'xlsx' for spreadsheet, 'pptx' for presentation."),
+          locale: z.string().optional().describe("Template locale (e.g. 'en', 'en-US', 'en-GB', 'de', 'es'). Determines the language of the template content."),
         },
         _meta: {
           ui: { resourceUri: EDITOR_APP_RESOURCE_URI },
         },
       },
-      async ({ fileName, fileType }) => {
+      async ({ fileName, fileType, locale }) => {
         const sessionId = crypto.randomUUID();
         const config = await createEditorConfig({
           sessionId,
           fileName: getFileName(fileName, fileType),
-          fileUrl: getTemplateUrl(fileType),
+          fileUrl: getTemplateUrl(fileType, locale),
         });
 
         return {
