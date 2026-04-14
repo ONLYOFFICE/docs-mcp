@@ -26,16 +26,22 @@ app.ontoolresult = async (result) => {
     config: any;
   };
 
+  const hostContext = app.getHostContext();
+  const locale = hostContext?.locale || "en";
+
+  content.config.editorConfig.lang = locale;
+
   const docEditorClient = new DocEditorClient(
     app,
     "editor",
     content.documentServerBaseUrl,
     content.sessionId
   );
-
+  
   docEditorClient.init().then(() => {
-    hideLoading();
     docEditorClient.open(content.config);
+
+    hideLoading();
     initDisplayModeButton();
   }).catch((error) => {
     log.error("Failed to initialize DocEditorClient:", error);
