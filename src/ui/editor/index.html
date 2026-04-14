@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>ONLYOFFICE Editor</title>
+
+    <style>
+      :root {
+        --loading-bg: #ffffff;
+        --loading-text: #555555;
+        --spinner-track: #e0e0e0;
+        --spinner-fill: #888888;
+        --btn-bg: rgba(255, 255, 255, 0.88);
+        --btn-hover-bg: rgba(245, 245, 245, 0.96);
+        --btn-border: rgba(0, 0, 0, 0.12);
+        --btn-shadow: rgba(0, 0, 0, 0.14);
+        --btn-icon-stroke: #444444;
+        --message-screen-bg: #ffffff;
+        --message-screen-title: #333333;
+        --message-screen-text: #888888;
+        --message-screen-illustration: #d0d0d0;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --loading-bg: #1e1e1e;
+          --loading-text: #cccccc;
+          --spinner-track: #383838;
+          --spinner-fill: #aaaaaa;
+          --btn-bg: rgba(38, 38, 38, 0.88);
+          --btn-hover-bg: rgba(52, 52, 52, 0.96);
+          --btn-border: rgba(255, 255, 255, 0.12);
+          --btn-shadow: rgba(0, 0, 0, 0.4);
+          --btn-icon-stroke: #cccccc;
+          --message-screen-bg: #1e1e1e;
+          --message-screen-title: #dddddd;
+          --message-screen-text: #777777;
+          --message-screen-illustration: #444444;
+        }
+      }
+
+      body, html, #editor-container {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      body {
+        position: relative;
+      }
+
+      #editor-container {
+        width: 100%;
+        height: 100%;
+      }
+
+        #editor-container iframe {
+          min-height: 600px;
+        }
+
+      #loading {
+        position: absolute;
+        inset: 0;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        background: var(--loading-bg);
+      }
+
+      #loading-spinner {
+        width: 32px;
+        height: 32px;
+        border: 3px solid var(--spinner-track);
+        border-top-color: var(--spinner-fill);
+        border-radius: 50%;
+        animation: spin 0.75s linear infinite;
+      }
+
+      #loading-text {
+        font: 500 14px/1.5 system-ui, sans-serif;
+        color: var(--loading-text);
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      #message-screen {
+        display: none;
+        position: absolute;
+        inset: 0;
+        z-index: 10;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        background: var(--message-screen-bg);
+      }
+
+      #message-screen-icon-idle,
+      #message-screen-icon-error {
+        width: 96px;
+        height: 80px;
+        opacity: 0.9;
+      }
+
+      #message-screen-title {
+        font: 600 15px/1.4 system-ui, sans-serif;
+        color: var(--message-screen-title);
+      }
+
+      #message-screen-text {
+        font: 400 13px/1.5 system-ui, sans-serif;
+        color: var(--message-screen-text);
+        text-align: center;
+        max-width: 280px;
+      }
+
+      #display-mode-button {
+        position: absolute;
+        bottom: 52px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        padding: 6px 14px;
+        background: var(--btn-bg);
+        border: 1px solid var(--btn-border);
+        border-radius: 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        box-shadow: 0 2px 8px var(--btn-shadow);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease, background 0.15s, box-shadow 0.15s;
+        white-space: nowrap;
+      }
+
+        #editor-container:hover #display-mode-button.initialized {
+          opacity: 1;
+          pointer-events: auto;
+        }
+
+        #display-mode-button:hover {
+          background: var(--btn-hover-bg);
+          box-shadow: 0 4px 12px var(--btn-shadow);
+        }
+
+        #display-mode-button svg {
+          flex-shrink: 0;
+        }
+
+        #icon-expand, #icon-compress {
+          display: none;
+        }
+
+        [data-mode="inline"] #icon-expand {
+          display: block !important;
+        }
+
+        [data-mode="fullscreen"] #icon-compress {
+          display: block !important;
+        }
+    </style>
+  </head>
+  <body>
+    <div id="loading">
+      <div id="loading-spinner"></div>
+      <div id="loading-text"></div>
+    </div>
+    <div id="message-screen">
+      <!-- idle: document + chat bubble -->
+      <svg id="message-screen-icon-idle" viewBox="0 0 96 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 4 L44 4 L56 14 L56 76 L4 76 Z" stroke="var(--message-screen-illustration)" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M44 4 L44 14 L56 14" stroke="var(--message-screen-illustration)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="12" y1="26" x2="48" y2="26" stroke="var(--message-screen-illustration)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="12" y1="34" x2="48" y2="34" stroke="var(--message-screen-illustration)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="12" y1="42" x2="34" y2="42" stroke="var(--message-screen-illustration)" stroke-width="1.5" stroke-linecap="round"/>
+        <rect x="60" y="20" width="32" height="24" rx="6" stroke="var(--message-screen-illustration)" stroke-width="2"/>
+        <path d="M68 44 L64 52 L74 44" stroke="var(--message-screen-illustration)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="70" cy="32" r="2" fill="var(--message-screen-illustration)"/>
+        <circle cx="76" cy="32" r="2" fill="var(--message-screen-illustration)"/>
+        <circle cx="82" cy="32" r="2" fill="var(--message-screen-illustration)"/>
+      </svg>
+      <!-- error: server with X badge -->
+      <svg id="message-screen-icon-error" viewBox="0 0 96 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:none">
+        <!-- Server unit 1 -->
+        <rect x="8" y="24" width="56" height="14" rx="2" stroke="var(--message-screen-illustration)" stroke-width="2"/>
+        <line x1="16" y1="31" x2="40" y2="31" stroke="var(--message-screen-illustration)" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="56" cy="31" r="2.5" fill="var(--message-screen-illustration)"/>
+        <!-- Server unit 2 -->
+        <rect x="8" y="42" width="56" height="14" rx="2" stroke="var(--message-screen-illustration)" stroke-width="2"/>
+        <line x1="16" y1="49" x2="40" y2="49" stroke="var(--message-screen-illustration)" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="56" cy="49" r="2.5" fill="var(--message-screen-illustration)"/>
+        <!-- Server unit 3 -->
+        <rect x="8" y="60" width="56" height="14" rx="2" stroke="var(--message-screen-illustration)" stroke-width="2"/>
+        <line x1="16" y1="67" x2="40" y2="67" stroke="var(--message-screen-illustration)" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="56" cy="67" r="2.5" fill="var(--message-screen-illustration)"/>
+        <!-- X badge (top-right) -->
+        <circle cx="80" cy="20" r="13" stroke="var(--message-screen-illustration)" stroke-width="2"/>
+        <line x1="74" y1="14" x2="86" y2="26" stroke="var(--message-screen-illustration)" stroke-width="2" stroke-linecap="round"/>
+        <line x1="86" y1="14" x2="74" y2="26" stroke="var(--message-screen-illustration)" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div id="message-screen-title"></div>
+      <div id="message-screen-text"></div>
+    </div>
+    <div id="editor-container">
+      <div id="editor"></div>
+      <button id="display-mode-button" data-mode="">
+        <svg id="icon-expand" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--btn-icon-stroke)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
+          <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
+        </svg>
+        <svg id="icon-compress" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--btn-icon-stroke)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/>
+          <line x1="10" y1="14" x2="3" y2="21"/><line x1="21" y1="3" x2="14" y2="10"/>
+        </svg>
+      </button>
+    </div>
+    <script type="module" src="/src/ui/editor/index.ts"></script>
+  </body>
+</html>
