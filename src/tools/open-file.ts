@@ -6,7 +6,7 @@ import { z } from "zod";
 import { CONFIG } from "../config.js";
 import { EDITOR_APP_RESOURCE_URI } from "../resources/editor.js";
 import type { McpTool } from "./tool.js";
-import { createEditorConfig } from "./utils/editor-config.js";
+import { createEditorConfig } from "../utils/editor-config.js";
 
 const FileSchema = z.object({
   download_url: z.url().describe("Direct download URL of the file to open."),
@@ -34,7 +34,7 @@ export const openFile: McpTool = {
         const fileName = file.file_name;
         const fileUrl = file.download_url;
         const sessionId = crypto.randomUUID();
-        const config = createEditorConfig({
+        const config = await createEditorConfig({
           sessionId,
           fileName,
           fileUrl,

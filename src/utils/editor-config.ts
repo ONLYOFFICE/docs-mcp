@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
-import { CONFIG } from "../../config.js";
-import { getDocumentType, getExtension } from "./document-type.js";
+import { CONFIG } from "../config.js";
+import { getDocumentType, getExtension, isEditable } from "./file-utils.js";
 
 type CreateEditorConfigParams = {
   sessionId: string;
@@ -8,7 +8,7 @@ type CreateEditorConfigParams = {
   fileUrl: string;
 };
 
-export function createEditorConfig({
+export async function createEditorConfig({
   sessionId,
   fileName,
   fileUrl,
@@ -21,8 +21,11 @@ export function createEditorConfig({
       key: sessionId,
       title: fileName,
       url: fileUrl,
+      permissions: {
+        edit: await isEditable(extension),
+      }
     },
-    documentType: getDocumentType(extension),
+    documentType: await getDocumentType(extension),
     editorConfig: {
       customization: {
         forcesave: true,

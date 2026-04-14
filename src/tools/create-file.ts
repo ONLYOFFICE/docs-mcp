@@ -6,7 +6,7 @@ import { z } from "zod";
 import { CONFIG } from "../config.js";
 import { EDITOR_APP_RESOURCE_URI } from "../resources/editor.js";
 import type { McpTool } from "./tool.js";
-import { createEditorConfig } from "./utils/editor-config.js";
+import { createEditorConfig } from "../utils/editor-config.js";
 
 const FILE_TYPES = ["docx", "xlsx", "pptx"] as const;
 const fileTypeSchema = z.enum(FILE_TYPES);
@@ -37,7 +37,7 @@ export const createFile: McpTool = {
       },
       async ({ fileName, fileType }) => {
         const sessionId = crypto.randomUUID();
-        const config = createEditorConfig({
+        const config = await createEditorConfig({
           sessionId,
           fileName: getFileName(fileName, fileType),
           fileUrl: getTemplateUrl(fileType),
