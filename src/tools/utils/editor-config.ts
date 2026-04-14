@@ -1,3 +1,5 @@
+import jwt from "jsonwebtoken";
+import { CONFIG } from "../../config.js";
 import { getDocumentType, getExtension } from "./document-type.js";
 
 type CreateEditorConfigParams = {
@@ -13,7 +15,7 @@ export function createEditorConfig({
 }: CreateEditorConfigParams) {
   const extension = getExtension(fileName);
 
-  return {
+  const config = {
     document: {
       fileType: extension,
       key: sessionId,
@@ -31,5 +33,13 @@ export function createEditorConfig({
         },
       },
     },
+  };
+
+  return {
+    ...config,
+    token: jwt.sign(config, CONFIG.DOCUMENT_SERVER_JWT_SECRET, {
+      algorithm: CONFIG.DOCUMENT_SERVER_JWT_ALGORITHM,
+      expiresIn: CONFIG.DOCUMENT_SERVER_JWT_EXPIRES_IN,
+    }),
   };
 }
