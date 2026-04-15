@@ -24,6 +24,7 @@ app.ontoolresult = async (result) => {
     sessionId: string;
     documentServerBaseUrl: string;
     config: any;
+    path: string | undefined;
   };
 
   const hostContext = app.getHostContext();
@@ -39,7 +40,7 @@ app.ontoolresult = async (result) => {
   );
   
   docEditorClient.init().then(() => {
-    docEditorClient.open(content.config);
+    docEditorClient.open(content.config, content.path);
 
     hideLoading();
     initDisplayModeButton();

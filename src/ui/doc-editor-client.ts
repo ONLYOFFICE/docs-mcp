@@ -15,6 +15,7 @@ interface DocEditor {
   createConnector(): Connector;
   denyEditingRights(): void;
   downloadAs(): void;
+  openDocument(data: Uint8Array): void;
 }
 
 export class DocEditorClient {
@@ -30,8 +31,13 @@ export class DocEditorClient {
     await this.loadScript(`${this.documentServerBaseUrl}/web-apps/apps/api/documents/api.js`);
   }
 
-  open(config: any): void {
+  open(config: any, filePath?: string): void {
     config.events = {
+      onAppReady: () => {
+        if (config.document?.url === "_data_" && filePath) {
+          this.onAppReady(filePath);
+        }
+      },
       onDocumentReady: this.onDocumentReady,
       onRequestSaveAs: this.onRequestSaveAs,
       onSaveDocument: this.onSaveDocument,
@@ -136,6 +142,49 @@ export class DocEditorClient {
       arguments: { sessionId: this.sessionId, commandId: command.id },
     }).catch((err) => console.error("set_editor_command_result failed:", err)).finally(() => this.processNext());
   }
+
+  private async readFileContent(path: string): Promise<Uint8Array> {
+    const chunks: Uint8Array[] = [];
+    let offset = 0;
+
+    for (;;) {
+      const result = await this.app.callServerTool({
+        name: "read_file_content",
+        arguments: { path, offset },
+      });
+
+      const sc = result.structuredContent as
+        | { error: string }
+        | { bytes: string; byteCount: number; totalBytes: number; hasMore: boolean };
+
+      if ("error" in sc) {
+        throw new Error(`read_file_content: ${sc.error}`);
+      }
+
+      const { bytes, byteCount, hasMore } = sc;
+
+      chunks.push(Uint8Array.from(atob(bytes), (c) => c.charCodeAt(0)));
+      offset += byteCount;
+
+      if (!hasMore) break;
+    }
+
+    const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+    const buffer = new Uint8Array(totalLength);
+    let pos = 0;
+    for (const chunk of chunks) {
+      buffer.set(chunk, pos);
+      pos += chunk.length;
+    }
+
+    return buffer;
+  }
+
+  private readonly onAppReady = async (filePath: string) => {
+    if (!this.docEditor) return;
+
+    this.docEditor.openDocument(await this.readFileContent(filePath));
+  };
 
   private readonly onDocumentReady = () => {
     this.connector = this.docEditor?.createConnector() ?? null;

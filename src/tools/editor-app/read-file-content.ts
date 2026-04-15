@@ -1,0 +1,122 @@
+import { open, stat } from "fs/promises";
+import { resolve } from "path";
+import { fileURLToPath } from "url";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
+import type { McpTool } from "../tool.js";
+
+export const MAX_CHUNK_BYTES = 512 * 1024;
+
+const TEMPLATES_DIR = new URL("../../assets/document-templates/", import.meta.url);
+const TEMPLATES_DIR_PATH = fileURLToPath(TEMPLATES_DIR);
+
+/**
+ * Resolves a blank file path using a three-step locale fallback:
+ * 1. Full BCP47 tag:  assets/document-templates/{locale}/new.{ext}
+ * 2. Language only:   assets/document-templates/{language}/new.{ext}
+ * 3. Default:         assets/document-templates/default/new.{ext}
+ */
+async function resolveBlankFilePath(locale: string, fileType: string): Promise<{ filePath: string; size: number } | null> {
+  const language = locale.split("-")[0];
+
+  const candidates = [locale];
+  if (language !== locale) candidates.push(language);
+  candidates.push("default");
+
+  for (const dir of candidates) {
+    const filePath = resolve(fileURLToPath(new URL(`${dir}/new.${fileType}`, TEMPLATES_DIR)));
+
+    if (!filePath.startsWith(TEMPLATES_DIR_PATH)) continue;
+
+    try {
+      const { size } = await stat(filePath);
+      return { filePath, size };
+    } catch {
+      // not found — try next candidate
+    }
+  }
+
+  return null;
+}
+
+export const readFileContent: McpTool = {
+  register(server: McpServer): void {
+    server.registerTool(
+      "read_file_content",
+      {
+        description: "Read a chunk of a document template file as base64-encoded bytes. App-only — called by the editor UI to stream template files to the client.",
+        inputSchema: {
+          path: z.string().describe("Blank file URI in format blank://{locale}/{fileType}, e.g. blank://en-US/docx."),
+          offset: z.number().int().min(0).default(0).describe("Byte offset to start reading from."),
+          byteCount: z
+            .number()
+            .min(1)
+            .max(MAX_CHUNK_BYTES)
+            .default(MAX_CHUNK_BYTES)
+            .describe("Bytes to read"),
+        },
+        _meta: { visibility: ["app"] },
+      },
+      async ({ path, offset, byteCount }) => {
+        if (!path.startsWith("blank://")) {
+          return {
+            content: [],
+            structuredContent: { error: `Invalid path format. Expected blank://{locale}/{fileType}, got: ${path}` },
+          };
+        }
+
+        const parts = path.slice("blank://".length).split("/");
+        if (parts.length !== 2 || !parts[0] || !parts[1]) {
+          return {
+            content: [],
+            structuredContent: { error: `Invalid blank URI: ${path}` },
+          };
+        }
+
+        const [locale, fileType] = parts;
+
+        const resolved = await resolveBlankFilePath(locale, fileType);
+
+        if (!resolved) {
+          return {
+            content: [],
+            structuredContent: { error: `Template not found for locale "${locale}", type "${fileType}".` },
+          };
+        }
+
+        const { filePath, size: totalBytes } = resolved;
+        let data: Buffer;
+
+        try {
+          const fh = await open(filePath, "r");
+          try {
+            const buf = Buffer.allocUnsafe(byteCount);
+            const { bytesRead } = await fh.read(buf, 0, byteCount, offset);
+            data = buf.subarray(0, bytesRead);
+          } finally {
+            await fh.close();
+          }
+        } catch {
+          return {
+            content: [],
+            structuredContent: { error: `Failed to read template file.` },
+          };
+        }
+
+        const bytes = data.toString("base64");
+        const hasMore = offset + data.length < totalBytes;
+
+        return {
+          content: [],
+          structuredContent: {
+            bytes,
+            offset,
+            byteCount: data.length,
+            totalBytes,
+            hasMore,
+          },
+        };
+      }
+    );
+  },
+};

@@ -11,9 +11,8 @@ import { createEditorConfig } from "../utils/editor-config.js";
 const FILE_TYPES = ["docx", "xlsx", "pptx"] as const;
 const fileTypeSchema = z.enum(FILE_TYPES);
 
-function getTemplateUrl(fileType: z.infer<typeof fileTypeSchema>, locale?: string): string {
-  const localePath = locale ? `/${locale}` : "";
-  return `https://static.onlyoffice.com/assets/docs/samples/${localePath}/new.${fileType}`;
+function getBlankFilePath(locale: string, fileType: z.infer<typeof fileTypeSchema>): string {
+  return `blank://${locale}/${fileType}`;
 }
 
 function getFileName(fileName: string, fileType: z.infer<typeof fileTypeSchema>): string {
@@ -42,7 +41,7 @@ export const createFile: McpTool = {
         const config = await createEditorConfig({
           sessionId,
           fileName: getFileName(fileName, fileType),
-          fileUrl: getTemplateUrl(fileType, locale),
+          fileUrl: `_data_`,
         });
 
         return {
@@ -51,6 +50,7 @@ export const createFile: McpTool = {
             sessionId,
             documentServerBaseUrl: CONFIG.DOCUMENT_SERVER_BASE_URL,
             config,
+            path: getBlankFilePath(locale || "default", fileType),
           },
         };
       }

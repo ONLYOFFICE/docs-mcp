@@ -5,6 +5,7 @@ import { createFile } from "./create-file.js";
 import { listEditorTools } from "./list-editor-tools.js";
 import { openFile } from "./open-file.js";
 import { pollCommands } from "./editor-app/poll-commands.js";
+import { readFileContent } from "./editor-app/read-file-content.js";
 import { saveFile } from "./save-file.js";
 import { setCommandResult } from "./editor-app/set-command-result.js";
 
@@ -16,6 +17,7 @@ const tools: McpTool[] = [
   saveFile,
   pollCommands,
   setCommandResult,
+  readFileContent,
 ];
 
 export function registerAllTools(server: McpServer): void {
