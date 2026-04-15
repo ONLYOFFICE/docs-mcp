@@ -42,6 +42,7 @@ export const createFile: McpTool = {
           sessionId,
           fileName: getFileName(fileName, fileType),
           fileUrl: `_data_`,
+          mode: "edit",
         });
 
         return {

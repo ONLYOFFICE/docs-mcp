@@ -24,13 +24,14 @@ export const openFile: McpTool = {
         description: "Open an existing file in the ONLYOFFICE Editor. Returns a sessionId required by list_editor_tools, call_editor_tool, and save_file.",
         inputSchema: {
           file: FileSchema,
+          mode: z.enum(["edit", "view"]).default("edit").describe("Editor mode: 'edit' to allow editing, 'view' for read-only."),
         },
         _meta: {
           ui: { resourceUri: EDITOR_APP_RESOURCE_URI },
           "openai/fileParams": ["file"],
         },
       },
-      async ({ file }) => {
+      async ({ file, mode }) => {
         const fileName = file.file_name;
         const fileUrl = file.download_url;
         const sessionId = crypto.randomUUID();
@@ -38,6 +39,7 @@ export const openFile: McpTool = {
           sessionId,
           fileName,
           fileUrl,
+          mode,
         });
 
         return {

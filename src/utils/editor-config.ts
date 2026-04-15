@@ -6,12 +6,14 @@ type CreateEditorConfigParams = {
   sessionId: string;
   fileName: string;
   fileUrl: string;
+  mode: "edit" | "view";
 };
 
 export async function createEditorConfig({
   sessionId,
   fileName,
   fileUrl,
+  mode,
 }: CreateEditorConfigParams) {
   const extension = getExtension(fileName);
 
@@ -27,6 +29,7 @@ export async function createEditorConfig({
     },
     documentType: await getDocumentType(extension),
     editorConfig: {
+      mode,
       customization: {
         forcesave: true,
         compactHeader: true,

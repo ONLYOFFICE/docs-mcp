@@ -38,7 +38,11 @@ export class DocEditorClient {
           this.onAppReady(filePath);
         }
       },
-      onDocumentReady: this.onDocumentReady,
+      onDocumentReady: () => {
+        const startPolling = config.document.permissions?.edit === true && config.editorConfig?.mode === "edit";
+
+        this.onDocumentReady(startPolling);
+      },
       onRequestSaveAs: this.onRequestSaveAs,
       onSaveDocument: this.onSaveDocument,
       onDownloadAs: this.onDownloadAs,
@@ -186,32 +190,34 @@ export class DocEditorClient {
     this.docEditor.openDocument(await this.readFileContent(filePath));
   };
 
-  private readonly onDocumentReady = () => {
+  private readonly onDocumentReady = (startPolling: boolean) => {
     this.connector = this.docEditor?.createConnector() ?? null;
 
-    this.connector?.attachEvent("ai_onCallToolResult", (result) => {
-      const commandId = this.pendingToolCommandId;
+    if (startPolling) {
+      this.connector?.attachEvent("ai_onCallToolResult", (result) => {
+        const commandId = this.pendingToolCommandId;
 
-      if (!commandId) return;
+        if (!commandId) return;
 
-      this.app.callServerTool({
-        name: "set_editor_command_result",
-        arguments: { sessionId: this.sessionId!, commandId, result },
-      }).catch((err) => console.error("set_editor_command_result failed:", err)).finally(() => this.processNext());
-    });
+        this.app.callServerTool({
+          name: "set_editor_command_result",
+          arguments: { sessionId: this.sessionId!, commandId, result },
+        }).catch((err) => console.error("set_editor_command_result failed:", err)).finally(() => this.processNext());
+      });
 
-    this.poller = new Poller(this.app, {
-      tool: "poll_editor_commands",
-      arguments: {sessionId: this.sessionId!},
-      onResult: (result) => {
-        const { commands } = result.structuredContent as { commands: Command[] };
-        this.enqueueCommands(commands);
-      },
-      onError: (error) => {
-        console.error("Error calling poll_editor_commands:", error);
-      },
-    });
-    this.poller.start();
+      this.poller = new Poller(this.app, {
+        tool: "poll_editor_commands",
+        arguments: {sessionId: this.sessionId!},
+        onResult: (result) => {
+          const { commands } = result.structuredContent as { commands: Command[] };
+          this.enqueueCommands(commands);
+        },
+        onError: (error) => {
+          console.error("Error calling poll_editor_commands:", error);
+        },
+      });
+      this.poller.start();
+    }
   };
 
   private readonly onRequestSaveAs = async (event: { data: { url: string } }) => {
