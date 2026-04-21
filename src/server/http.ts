@@ -8,7 +8,7 @@ import { CONFIG } from "../config.js";
 export async function startStreamableHTTPServer(
   createServer: () => McpServer
 ): Promise<void> {
-  const app = createMcpExpressApp({ host: "0.0.0.0" });
+  const app = createMcpExpressApp({ host: CONFIG.HOST });
   app.use(cors());
 
   app.all("/mcp", async (req: Request, res: Response) => {
@@ -37,12 +37,12 @@ export async function startStreamableHTTPServer(
     }
   });
 
-  const httpServer = app.listen(CONFIG.PORT, (err) => {
+  const httpServer = app.listen(CONFIG.PORT, CONFIG.HOST, (err) => {
     if (err) {
       console.error("Failed to start server:", err);
       process.exit(1);
     }
-    console.log(`MCP server listening on http://localhost:${CONFIG.PORT}/mcp`);
+    console.log(`MCP server listening on http://${CONFIG.HOST}:${CONFIG.PORT}/mcp`);
   });
 
   const shutdown = () => {
