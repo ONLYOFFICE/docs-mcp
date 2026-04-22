@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { McpTool } from "../tool.js";
+import { CONFIG } from "../../config.js";
 
 export const MAX_CHUNK_BYTES = 512 * 1024;
 
@@ -39,14 +40,30 @@ async function resolveBlankFilePath(locale: string, fileType: string): Promise<{
   return null;
 }
 
+async function resolveLocalFilePath(uri: string): Promise<{ filePath: string; size: number } | null> {
+  let localPath: string;
+  try {
+    localPath = fileURLToPath(uri);
+  } catch {
+    localPath = uri.slice("file://".length);
+  }
+
+  try {
+    const { size } = await stat(localPath);
+    return { filePath: localPath, size };
+  } catch {
+    return null;
+  }
+}
+
 export const readFileContent: McpTool = {
   register(server: McpServer): void {
     server.registerTool(
       "read_file_content",
       {
-        description: "Read a chunk of a document template file as base64-encoded bytes. App-only — called by the editor UI to stream template files to the client.",
+        description: "Read a chunk of a document file as base64-encoded bytes. App-only — called by the editor UI to stream files to the client.",
         inputSchema: {
-          path: z.string().describe("Blank file URI in format blank://{locale}/{fileType}, e.g. blank://en-US/docx."),
+          url: z.string().describe("Blank file URL in format blank://{locale}/{fileType}, or local file URL (stdio transport only)."),
           offset: z.number().int().min(0).default(0).describe("Byte offset to start reading from."),
           byteCount: z
             .number()
@@ -57,36 +74,60 @@ export const readFileContent: McpTool = {
         },
         _meta: { visibility: ["app"] },
       },
-      async ({ path, offset, byteCount }) => {
-        if (!path.startsWith("blank://")) {
+      async ({ url, offset, byteCount }) => {
+        let filePath: string | undefined = undefined;
+        let totalBytes: number = 0;
+
+        if (url.startsWith("blank://")) {
+          const parts = url.slice("blank://".length).split("/");
+          if (parts.length !== 2 || !parts[0] || !parts[1]) {
+            return {
+              content: [],
+              structuredContent: { error: `Invalid blank URL: ${url}` },
+            };
+          }
+
+          const [locale, fileType] = parts;
+          const resolved = await resolveBlankFilePath(locale, fileType);
+
+          if (!resolved) {
+            return {
+              content: [],
+              structuredContent: { error: `Template not found for locale "${locale}", type "${fileType}".` },
+            };
+          }
+
+          filePath = resolved.filePath;
+          totalBytes = resolved.size;
+        }
+
+        if (url.startsWith("file://")) {
+          if (CONFIG.TRANSPORT !== "stdio") {
+            return {
+              content: [],
+              structuredContent: { error: `Local file access is only supported with stdio transport.` },
+            };
+          }
+
+          const resolved = await resolveLocalFilePath(url);
+          if (!resolved) {
+            return {
+              content: [],
+              structuredContent: { error: `Local file not found: ${url}` },
+            };
+          }
+          filePath = resolved.filePath;
+          totalBytes = resolved.size;
+        } 
+        
+        if (!filePath) {
           return {
             content: [],
-            structuredContent: { error: `Invalid path format. Expected blank://{locale}/{fileType}, got: ${path}` },
+            structuredContent: { error: `Invalid path format. Expected blank://{locale}/{fileType} or file:// URL, got: ${url}` },
           };
         }
 
-        const parts = path.slice("blank://".length).split("/");
-        if (parts.length !== 2 || !parts[0] || !parts[1]) {
-          return {
-            content: [],
-            structuredContent: { error: `Invalid blank URI: ${path}` },
-          };
-        }
-
-        const [locale, fileType] = parts;
-
-        const resolved = await resolveBlankFilePath(locale, fileType);
-
-        if (!resolved) {
-          return {
-            content: [],
-            structuredContent: { error: `Template not found for locale "${locale}", type "${fileType}".` },
-          };
-        }
-
-        const { filePath, size: totalBytes } = resolved;
         let data: Buffer;
-
         try {
           const fh = await open(filePath, "r");
           try {
@@ -99,7 +140,7 @@ export const readFileContent: McpTool = {
         } catch {
           return {
             content: [],
-            structuredContent: { error: `Failed to read template file.` },
+            structuredContent: { error: `Failed to read file.` },
           };
         }
 

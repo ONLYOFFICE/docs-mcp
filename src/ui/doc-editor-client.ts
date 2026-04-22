@@ -31,11 +31,11 @@ export class DocEditorClient {
     await this.loadScript(`${this.documentServerBaseUrl}/web-apps/apps/api/documents/api.js`);
   }
 
-  open(config: any, filePath?: string): void {
+  open(config: any, fileUrl?: string): void {
     config.events = {
       onAppReady: () => {
-        if (config.document?.url === "_data_" && filePath) {
-          this.onAppReady(filePath);
+        if (config.document?.url === "_data_" && fileUrl) {
+          this.onAppReady(fileUrl);
         }
       },
       onDocumentReady: () => {
@@ -147,14 +147,14 @@ export class DocEditorClient {
     }).catch((err) => console.error("set_editor_command_result failed:", err)).finally(() => this.processNext());
   }
 
-  private async readFileContent(path: string): Promise<Uint8Array> {
+  private async readFileContent(url: string): Promise<Uint8Array> {
     const chunks: Uint8Array[] = [];
     let offset = 0;
 
     for (;;) {
       const result = await this.app.callServerTool({
         name: "read_file_content",
-        arguments: { path, offset },
+        arguments: { url, offset },
       });
 
       const sc = result.structuredContent as
@@ -184,10 +184,10 @@ export class DocEditorClient {
     return buffer;
   }
 
-  private readonly onAppReady = async (filePath: string) => {
+  private readonly onAppReady = async (fileUrl: string) => {
     if (!this.docEditor) return;
 
-    this.docEditor.openDocument(await this.readFileContent(filePath));
+    this.docEditor.openDocument(await this.readFileContent(fileUrl));
   };
 
   private readonly onDocumentReady = (startPolling: boolean) => {

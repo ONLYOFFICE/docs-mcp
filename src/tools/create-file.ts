@@ -11,7 +11,7 @@ import { createEditorConfig } from "../utils/editor-config.js";
 const FILE_TYPES = ["docx", "xlsx", "pptx"] as const;
 const fileTypeSchema = z.enum(FILE_TYPES);
 
-function getBlankFilePath(locale: string, fileType: z.infer<typeof fileTypeSchema>): string {
+function getBlankFileUrl(locale: string, fileType: z.infer<typeof fileTypeSchema>): string {
   return `blank://${locale}/${fileType}`;
 }
 
@@ -51,7 +51,7 @@ export const createFile: McpTool = {
             sessionId,
             documentServerBaseUrl: CONFIG.DOCUMENT_SERVER_BASE_URL,
             config,
-            path: getBlankFilePath(locale || "default", fileType),
+            fileUrl: getBlankFileUrl(locale || "default", fileType),
           },
         };
       }
