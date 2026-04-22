@@ -41,6 +41,14 @@ export class FormatsProvider {
 
     return formats.find((f) => extension === f.name);
   }
+
+  async getListViewableExtensions(): Promise<string[]> {
+    const formats = await this.getDocFormats();
+
+    return formats
+      .filter((f) => f.type)
+      .map((f) => f.name);
+  }
 }
 
 export const formatsProvider = new FormatsProvider();

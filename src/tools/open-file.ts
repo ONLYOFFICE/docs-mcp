@@ -7,6 +7,8 @@ import { CONFIG } from "../config.js";
 import { EDITOR_APP_RESOURCE_URI } from "../resources/editor.js";
 import type { McpTool } from "./tool.js";
 import { createEditorConfig } from "../utils/editor-config.js";
+import { getDocumentType, getExtension } from "../utils/file-utils.js";
+import { formatsProvider } from "../providers/formats-provider.js";
 
 const FileSchema = z.object({
   download_url: z.url().describe("Direct download URL of the file to open."),
@@ -35,6 +37,24 @@ export const openFile: McpTool = {
         const fileName = file.file_name;
         const fileUrl = file.download_url;
         const sessionId = crypto.randomUUID();
+
+        const extension = getExtension(fileName);
+        const documentType = await getDocumentType(extension);
+
+        if (!documentType) {
+          const supportedExtensions = await formatsProvider.getListViewableExtensions();
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: `The file type .${extension} is not supported. Supported file types: ${supportedExtensions.join(", ")}.`,
+              },
+            ],
+            isError: true,
+          };
+        }
+
         const config = await createEditorConfig({
           sessionId,
           fileName,
