@@ -6,18 +6,18 @@ import { CONFIG } from "../config.js";
 import type { McpResource } from "./resource.js";
 
 export const EDITOR_APP_RESOURCE_URI = "ui://editor/index.html";
-const DIST_DIR = path.join(import.meta.dirname, "../../dist");
-export const EDITOR_APP_PATH = path.join(DIST_DIR, "src", "ui", "editor", "index.html");
+
+export const EDITOR_APP_PATH = path.join("src", "ui", "editor", "index.html");
 
 export const editorResource: McpResource = {
-  register(server: McpServer): void {
+  register(server: McpServer, distDir: string): void {
     registerAppResource(
       server,
       "ONLYOFFICE Editor",
       EDITOR_APP_RESOURCE_URI,
       { mimeType: RESOURCE_MIME_TYPE },
       async () => {
-        const html = await fs.readFile(EDITOR_APP_PATH, "utf-8");
+        const html = await fs.readFile(path.join(distDir, EDITOR_APP_PATH), "utf-8");
 
         return {
           contents: [

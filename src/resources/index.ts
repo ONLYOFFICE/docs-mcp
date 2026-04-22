@@ -4,8 +4,8 @@ import { editorResource } from "./editor.js";
 
 const resources: McpResource[] = [editorResource];
 
-export function registerAllResources(server: McpServer): void {
+export function registerAllResources(server: McpServer, distDir: string): void {
   for (const resource of resources) {
-    resource.register(server);
+    resource.register(server, distDir);
   }
 }
