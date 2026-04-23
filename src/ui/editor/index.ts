@@ -8,6 +8,10 @@ const log = {
   error: console.error.bind(console, "[ONLYOFFICE-EDITOR]"),
 };
 
+const TOOL_RESULT_TIMEOUT_MS = 10_000;
+const INLINE_EDITOR_HEIGHT = 600;
+const EDITOR_CONTAINER_ID = "editor";
+
 let toolResultTimer: ReturnType<typeof setTimeout> | null = null;
 
 app.ontoolresult = async (result) => {
@@ -34,7 +38,7 @@ app.ontoolresult = async (result) => {
 
   const docEditorClient = new DocEditorClient(
     app,
-    "editor",
+    EDITOR_CONTAINER_ID,
     content.documentServerBaseUrl,
     content.sessionId
   );
@@ -64,7 +68,7 @@ app.onhostcontextchanged = (context) => {
 
     if (context.displayMode === "inline") {
       app.sendSizeChanged({
-        height: 600,
+        height: INLINE_EDITOR_HEIGHT,
       });
     }
   }
@@ -77,12 +81,12 @@ app.connect().then(() => {
 
   toolResultTimer = setTimeout(() => {
     toolResultTimer = null;
-    log.info("Tool result timeout (ontoolresult) — no result received within 10 s");
+    log.info(`Tool result timeout (ontoolresult) — no result received within ${TOOL_RESULT_TIMEOUT_MS / 1000} s`);
     showMessageScreen(
       "No response received",
       "Ask the AI assistant to open a file in ONLYOFFICE to get started."
     );
-  }, 10_000);
+  }, TOOL_RESULT_TIMEOUT_MS);
 });
 
 const showLoading = (message: string): void => {
