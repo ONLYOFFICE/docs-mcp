@@ -18,6 +18,11 @@ interface DocEditor {
   openDocument(data: Uint8Array): void;
 }
 
+const log = {
+  info: console.log.bind(console, "[ONLYOFFICE-EDITOR-CLIENT]"),
+  error: console.error.bind(console, "[ONLYOFFICE-EDITOR-CLIENT]"),
+};
+
 export class DocEditorClient {
   private docEditor: DocEditor | null = null;
   private connector: Connector | null = null;
@@ -91,7 +96,6 @@ export class DocEditorClient {
 
     this.connector.executeMethod("AI", [{ type: "Tools" }], (data) => {
       let tools: { name: string; description: string }[] = Array.isArray(data) ? data : ((data as any)?.Tools ?? []);
-      console.log("AI tools:", tools);
 
       const disabledTools = new Set([
         "addImage",
@@ -122,7 +126,7 @@ export class DocEditorClient {
       this.app.callServerTool({
         name: "set_editor_command_result",
         arguments: { sessionId: this.sessionId!, commandId: command.id, result: tools },
-      }).catch((err) => console.error("set_editor_command_result failed:", err)).finally(() => this.processNext());
+      }).catch((err) => log.error("set_editor_command_result failed:", err)).finally(() => this.processNext());
     });
   }
 
@@ -144,7 +148,7 @@ export class DocEditorClient {
     this.app.callServerTool({
       name: "set_editor_command_result",
       arguments: { sessionId: this.sessionId, commandId: command.id },
-    }).catch((err) => console.error("set_editor_command_result failed:", err)).finally(() => this.processNext());
+    }).catch((err) => log.error("set_editor_command_result failed:", err)).finally(() => this.processNext());
   }
 
   private async readFileContent(url: string): Promise<Uint8Array> {
@@ -162,6 +166,7 @@ export class DocEditorClient {
         | { bytes: string; byteCount: number; totalBytes: number; hasMore: boolean };
 
       if ("error" in sc) {
+        log.error("read_file_content error:", sc.error);
         throw new Error(`read_file_content: ${sc.error}`);
       }
 
@@ -191,6 +196,8 @@ export class DocEditorClient {
   };
 
   private readonly onDocumentReady = (startPolling: boolean) => {
+    log.info("Document is ready (onDocumentReady)");
+
     this.connector = this.docEditor?.createConnector() ?? null;
 
     if (startPolling) {
@@ -202,7 +209,7 @@ export class DocEditorClient {
         this.app.callServerTool({
           name: "set_editor_command_result",
           arguments: { sessionId: this.sessionId!, commandId, result },
-        }).catch((err) => console.error("set_editor_command_result failed:", err)).finally(() => this.processNext());
+        }).catch((err) => log.error("set_editor_command_result failed:", err)).finally(() => this.processNext());
       });
 
       this.poller = new Poller(this.app, {
@@ -213,7 +220,7 @@ export class DocEditorClient {
           this.enqueueCommands(commands);
         },
         onError: (error) => {
-          console.error("Error calling poll_editor_commands:", error);
+          log.error("poll_editor_commands error:", error);
         },
       });
       this.poller.start();

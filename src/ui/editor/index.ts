@@ -11,12 +11,12 @@ const log = {
 let toolResultTimer: ReturnType<typeof setTimeout> | null = null;
 
 app.ontoolresult = async (result) => {
+  log.info("Tool result received (ontoolresult)");
+
   if (toolResultTimer !== null) {
     clearTimeout(toolResultTimer);
     toolResultTimer = null;
   }
-
-  log.info("ontoolresult:", result);
 
   showLoading("Waiting loading ONLYOFFICE Editor...");
 
@@ -39,6 +39,8 @@ app.ontoolresult = async (result) => {
     content.sessionId
   );
   
+  log.info("Initializing DocEditorClient, sessionId:", content.sessionId);
+
   docEditorClient.init().then(() => {
     docEditorClient.open(content.config, content.fileUrl);
 
@@ -57,6 +59,7 @@ app.ontoolresult = async (result) => {
 
 app.onhostcontextchanged = (context) => {
   if (context.displayMode) {
+    log.info("Display mode changed:", context.displayMode);
     changeDisplayMode(context.displayMode);
 
     if (context.displayMode === "inline") {
@@ -74,6 +77,7 @@ app.connect().then(() => {
 
   toolResultTimer = setTimeout(() => {
     toolResultTimer = null;
+    log.info("Tool result timeout (ontoolresult) — no result received within 10 s");
     showMessageScreen(
       "No response received",
       "Ask the AI assistant to open a file in ONLYOFFICE to get started."
