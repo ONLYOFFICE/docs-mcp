@@ -25,6 +25,7 @@ const log = {
 
 export class DocEditorClient {
   private docEditor: DocEditor | null = null;
+  private documentType: string | null = null;
   private connector: Connector | null = null;
   private poller: Poller | null = null;
   private pendingToolCommandId: string | null = null;
@@ -54,6 +55,7 @@ export class DocEditorClient {
     };
 
     this.docEditor = new DocsAPI.DocEditor(this.containerId, config);
+    this.documentType = config.documentType;
   }
 
   private loadScript(src: string): Promise<void> {
@@ -97,35 +99,12 @@ export class DocEditorClient {
     this.connector.executeMethod("AI", [{ type: "Tools" }], (data) => {
       let tools: { name: string; description: string }[] = Array.isArray(data) ? data : ((data as any)?.Tools ?? []);
 
-      const disabledTools = new Set([
-        "addImage",
-        "checkSpelling",
-        "commentText",
-        "generateDocx",
-        "generateForm",
-        "rewriteText",
-
-        "explainFormula",
-        "fillMissingData",
-        "fixFormula",
-        "highlightAnomalies",
-        "highlightDuplicates",
-        "insertPivotTable",
-        "setAutoFilter",
-        "setMultiSort",
-        "setSort",
-        "summarizeData",
-
-        "addChartToSlide",
-        "addImageByDescription",
-        "generatePresentationWithTheme",
-      ]);
-
-      tools = tools.filter(tool => !disabledTools.has(tool.name));
-
       this.app.callServerTool({
         name: "set_editor_command_result",
-        arguments: { sessionId: this.sessionId!, commandId: command.id, result: tools },
+        arguments: { sessionId: this.sessionId!, commandId: command.id, result: {
+          documentType: this.documentType,
+          tools,
+        } },
       }).catch((err) => log.error("set_editor_command_result failed:", err)).finally(() => this.processNext());
     });
   }
