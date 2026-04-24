@@ -3,10 +3,10 @@ import { callEditorTool } from "./call-editor-tool.js";
 import { createFile } from "./create-file.js";
 import { listEditorTools } from "./list-editor-tools.js";
 import { openFile } from "./open-file.js";
-import { pollCommands } from "./editor-app/poll-commands.js";
-import { readFileContent } from "./editor-app/read-file-content.js";
+import { pollEditorCommands } from "./poll-editor-commands.js";
+import { readFileContent } from "./read-file-content.js";
 import { saveFile } from "./save-file.js";
-import { setCommandResult } from "./editor-app/set-command-result.js";
+import { setEditorCommandResult } from "./set-editor-command-result.js";
 
 export interface McpTool {
   register(server: McpServer): void;
@@ -18,8 +18,8 @@ const tools: McpTool[] = [
   listEditorTools,
   callEditorTool,
   saveFile,
-  pollCommands,
-  setCommandResult,
+  pollEditorCommands,
+  setEditorCommandResult,
   readFileContent,
 ];
 
