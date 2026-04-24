@@ -1,7 +1,8 @@
-import { createServer } from "./server.js";
-import { CONFIG } from "./src/config.js";
-import { startStreamableHTTPServer } from "./src/server/http.js";
-import { startStdioServer } from "./src/server/stdio.js";
+
+import { CONFIG } from "./config.js";
+import { startStreamableHTTPServer } from "./server/streamable-http.js";
+import { startStdioServer } from "./server/stdio.js";
+import { createServer } from "./server/index.js";
 
 async function main() {
   if (CONFIG.TRANSPORT === "stdio") {

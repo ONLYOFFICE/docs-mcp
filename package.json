@@ -2,12 +2,12 @@
   "name": "@onlyoffice/docs-mcp",
   "version": "0.0.1",
   "description": "",
-  "main": "index.js",
+  "main": "dist/src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "copy-assets": "node --input-type=commonjs --eval \"require('fs').cpSync('src/assets', 'dist/src/assets', { recursive: true })\"",
     "build": "tsc --noEmit && tsc -p tsconfig.server.json && npm run copy-assets && cross-env INPUT=src/ui/editor/index.html vite build",
-    "start": "concurrently --raw \"cross-env NODE_ENV=development INPUT=src/ui/editor/index.html vite build --watch\" \"tsx watch main.ts\""
+    "start": "concurrently --raw \"cross-env NODE_ENV=development INPUT=src/ui/editor/index.html vite build --watch\" \"tsx watch src/index.ts\""
   },
   "keywords": [],
   "author": "",
