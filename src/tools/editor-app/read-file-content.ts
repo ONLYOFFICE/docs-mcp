@@ -3,7 +3,7 @@ import { resolve } from "path";
 import { fileURLToPath } from "url";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import type { McpTool } from "../tool.js";
+import type { McpTool } from "../index.js";
 import { CONFIG } from "../../config.js";
 
 export const MAX_CHUNK_BYTES = 512 * 1024;

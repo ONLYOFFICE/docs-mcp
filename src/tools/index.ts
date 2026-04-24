@@ -1,5 +1,4 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { McpTool } from "./tool.js";
 import { callEditorTool } from "./call-editor-tool.js";
 import { createFile } from "./create-file.js";
 import { listEditorTools } from "./list-editor-tools.js";
@@ -8,6 +7,10 @@ import { pollCommands } from "./editor-app/poll-commands.js";
 import { readFileContent } from "./editor-app/read-file-content.js";
 import { saveFile } from "./save-file.js";
 import { setCommandResult } from "./editor-app/set-command-result.js";
+
+export interface McpTool {
+  register(server: McpServer): void;
+}
 
 const tools: McpTool[] = [
   createFile,

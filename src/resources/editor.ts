@@ -3,7 +3,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { CONFIG } from "../config.js";
-import type { McpResource } from "./resource.js";
+import type { McpResource } from "./index.js";
 
 export const EDITOR_APP_RESOURCE_URI = "ui://editor/index.html";
 
