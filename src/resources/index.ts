@@ -1,5 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { editorResource } from "./editor.js";
+import { editorResource } from "./definitions/editor.js";
 
 export interface McpResource {
   register(server: McpServer, distDir: string): void;

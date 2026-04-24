@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { commandQueue } from "../command-queue.js";
-import type { McpTool } from "./index.js";
+import { commandQueue } from "../../command-queue.js";
+import type { McpTool } from "../index.js";
 
 export const setEditorCommandResult: McpTool = {
   register(server: McpServer): void {

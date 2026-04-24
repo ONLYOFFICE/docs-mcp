@@ -3,12 +3,12 @@ import {
 } from "@modelcontextprotocol/ext-apps/server";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { CONFIG } from "../config.js";
-import { EDITOR_APP_RESOURCE_URI } from "../resources/editor.js";
-import type { McpTool } from "./index.js";
-import { createEditorConfig } from "../utils/editor-config.js";
-import { getDocumentType, getExtension } from "../utils/file-utils.js";
-import { formatsProvider } from "../providers/formats-provider.js";
+import { CONFIG } from "../../config.js";
+import { EDITOR_APP_RESOURCE_URI } from "../../resources/definitions/editor.js";
+import type { McpTool } from "../index.js";
+import { createEditorConfig } from "../../utils/editor-config.js";
+import { getDocumentType, getExtension } from "../../utils/file-utils.js";
+import { formatsProvider } from "../../providers/formats-provider.js";
 import { basename } from "path";
 import { fileURLToPath } from "url";
 import { stat } from "fs/promises";
