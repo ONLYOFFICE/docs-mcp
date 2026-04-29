@@ -1,4 +1,4 @@
-import { formatsProvider } from "../providers/formats-provider.js";
+import { formatsProvider } from "./formats-provider.js";
 
 export function getExtension(filename: string): string {
   const dotIndex = filename.lastIndexOf(".");

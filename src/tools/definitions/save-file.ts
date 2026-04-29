@@ -1,6 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { commandQueue } from "../../command-queue.js";
+import { commandQueue } from "../../domain/editor-session/command-queue.js";
 import type { McpTool } from "../index.js";
 
 export const saveFile: McpTool = {

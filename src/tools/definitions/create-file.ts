@@ -6,7 +6,7 @@ import { z } from "zod";
 import { CONFIG } from "../../config.js";
 import { EDITOR_APP_RESOURCE_URI } from "../../resources/definitions/editor.js";
 import type { McpTool } from "../index.js";
-import { createEditorConfig } from "../../utils/editor-config.js";
+import { createEditorConfig } from "../../domain/document-server/editor-config.js";
 
 const FILE_TYPES = ["docx", "xlsx", "pptx"] as const;
 const fileTypeSchema = z.enum(FILE_TYPES);

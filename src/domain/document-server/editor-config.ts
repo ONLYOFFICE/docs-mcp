@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { CONFIG } from "../config.js";
+import { CONFIG } from "../../config.js";
 import { getDocumentType, getExtension, isEditable } from "./file-utils.js";
 
 type CreateEditorConfigParams = {
