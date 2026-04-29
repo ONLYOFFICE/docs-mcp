@@ -8,7 +8,7 @@ import { CONFIG } from "../../config.js";
 
 export const MAX_CHUNK_BYTES = 512 * 1024;
 
-const TEMPLATES_DIR = new URL("../../assets/document-templates/", import.meta.url);
+const TEMPLATES_DIR = new URL("../../../assets/document-templates/", import.meta.url);
 const TEMPLATES_DIR_PATH = fileURLToPath(TEMPLATES_DIR);
 
 /**

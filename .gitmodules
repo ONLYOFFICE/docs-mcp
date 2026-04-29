@@ -1,4 +1,4 @@
-[submodule "src/assets/document-templates"]
-	path = src/assets/document-templates
+[submodule "assets/document-templates"]
+	path = assets/document-templates
 	url = https://github.com/ONLYOFFICE/document-templates
 	branch = main/new-2letter-code
