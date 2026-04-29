@@ -1,5 +1,5 @@
 import type { App } from "@modelcontextprotocol/ext-apps";
-import type { CommandType, Command } from "../domain/editor-session/command-queue.js";
+import type { CommandType, Command } from "../../domain/editor-session/command-queue.js";
 import { Poller } from "./poller.js";
 
 declare const DocsAPI: { DocEditor: new (id: string, config: object) => DocEditor };

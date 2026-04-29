@@ -1,5 +1,5 @@
 import { App } from "@modelcontextprotocol/ext-apps";
-import { DocEditorClient } from "../doc-editor-client.js";
+import { DocEditorClient } from "./doc-editor-client.js";
 
 const app = new App({ name: "ONLYOFFICE Editor App", version: "1.0.0" });
 
