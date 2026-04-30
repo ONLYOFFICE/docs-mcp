@@ -5,7 +5,7 @@ import path from "node:path";
 
 const DIST_DIR = import.meta.filename.endsWith(".ts")
   ? path.join(import.meta.dirname, "..", "..", "dist")
-  : path.join(import.meta.dirname, "..", "..");
+  : path.dirname(process.argv[1]);
 
 /**
  * Creates a new MCP server instance with tools and resources registered.

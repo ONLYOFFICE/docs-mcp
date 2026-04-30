@@ -1,5 +1,5 @@
 import { open, stat } from "fs/promises";
-import { resolve } from "path";
+import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
@@ -8,8 +8,9 @@ import { CONFIG } from "../../config.js";
 
 export const MAX_CHUNK_BYTES = 512 * 1024;
 
-const TEMPLATES_DIR = new URL("../../../assets/document-templates/", import.meta.url);
-const TEMPLATES_DIR_PATH = fileURLToPath(TEMPLATES_DIR);
+const TEMPLATES_DIR_PATH = import.meta.filename.endsWith(".ts")
+  ? fileURLToPath(new URL("../../../assets/document-templates/", import.meta.url))
+  : resolve(dirname(process.argv[1]), "assets", "document-templates");
 
 /**
  * Resolves a blank file path using a three-step locale fallback:
@@ -25,7 +26,7 @@ async function resolveBlankFilePath(locale: string, fileType: string): Promise<{
   candidates.push("default");
 
   for (const dir of candidates) {
-    const filePath = resolve(fileURLToPath(new URL(`${dir}/new.${fileType}`, TEMPLATES_DIR)));
+    const filePath = resolve(TEMPLATES_DIR_PATH, dir, `new.${fileType}`);
 
     if (!filePath.startsWith(TEMPLATES_DIR_PATH)) continue;
 
