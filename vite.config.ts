@@ -16,7 +16,23 @@ for (const level of ["info", "warn", "error"] as const) {
 
 export default defineConfig({
   customLogger: prefixedLogger,
-  plugins: [viteSingleFile()],
+  plugins: [
+    viteSingleFile(),
+    {
+      name: "ext-apps-output-dir",
+      enforce: "post",
+      generateBundle(_, bundle) {
+        for (const asset of Object.values(bundle)) {
+          if (asset.type === "asset") {
+            asset.fileName = asset.fileName.replace(
+              /^src\/ext-apps\//,
+              "ext-apps/",
+            );
+          }
+        }
+      },
+    },
+  ],
   build: {
     sourcemap: isDevelopment ? "inline" : undefined,
     cssMinify: !isDevelopment,

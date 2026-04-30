@@ -7,7 +7,7 @@ import type { McpResource } from "../index.js";
 
 export const EDITOR_APP_RESOURCE_URI = "ui://editor/index.html";
 
-export const EDITOR_APP_PATH = path.join("src", "ext-apps", "editor", "index.html");
+export const EDITOR_APP_PATH = path.join("ext-apps", "editor", "index.html");
 
 export const editorResource: McpResource = {
   register(server: McpServer, distDir: string): void {
