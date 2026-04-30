@@ -1,18 +1,42 @@
 {
   "name": "@onlyoffice/docs-mcp",
   "version": "0.0.1",
-  "description": "",
-  "main": "dist/src/index.js",
+  "description": "ONLYOFFICE Docs Model Context Protocol Server",
+  "keywords": [
+    "onlyoffice",
+    "docs",
+    "modelcontextprotocol",
+    "mcp"
+  ],
+  "homepage": "https://github.com/onlyoffice/docs-mcp/",
+  "bugs": {
+    "url": "https://github.com/onlyoffice/docs-mcp/issues/",
+    "email": "support@onlyoffice.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ONLYOFFICE/docs-mcp"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Ascensio System SIA",
+    "email": "integration@onlyoffice.com",
+    "url": "https://onlyoffice.com/"
+  },
+  "type": "module",
+  "bin": {
+    "onlyoffice-docs-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "copy-assets": "node --input-type=commonjs --eval \"require('fs').cpSync('assets', 'dist/assets', { recursive: true })\"",
     "build": "tsc --noEmit && tsc -p tsconfig.server.json && npm run copy-assets && cross-env INPUT=src/ext-apps/editor/index.html vite build",
     "start": "concurrently --raw \"cross-env NODE_ENV=development INPUT=src/ext-apps/editor/index.html vite build --watch\" \"tsx watch src/index.ts\""
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module",
   "dependencies": {
     "@modelcontextprotocol/ext-apps": "^1.2.2",
     "@modelcontextprotocol/sdk": "^1.27.1",
