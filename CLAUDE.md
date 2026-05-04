@@ -8,11 +8,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Development (watch mode — rebuilds UI and restarts server on changes)
 npm start
 
+# Development with stdio transport
+npm run dev:stdio
+
 # Production build (type-check + compile server declarations + bundle UI)
 npm run build
 
 # Run in stdio mode (for MCP clients that use stdio transport)
-node dist/main.js --stdio
+node dist/index.js --stdio
 ```
 
 No test suite is configured (`npm test` exits with an error).
@@ -36,15 +39,15 @@ This is an **MCP (Model Context Protocol) server** that bridges an AI assistant 
 
 | Target | Entry | Compiler | Output |
 |--------|-------|----------|--------|
-| Server | `main.ts` / `server.ts` | `tsc -p tsconfig.server.json` | `dist/` (JS + `.d.ts`) |
-| Editor UI | `src/ui/editor/index.html` + `index.ts` | Vite + `vite-plugin-singlefile` | `dist/src/ui/editor/index.html` (single self-contained HTML file) |
+| Server | `src/index.ts` | Bun | `dist/index.js` |
+| Editor UI | `src/ext-apps/editor/index.html` + `index.ts` | Vite + `vite-plugin-singlefile` | `dist/ext-apps/editor/index.html` (single self-contained HTML file) |
 
 The UI is a single-file HTML bundle inlined into the MCP resource at runtime by `src/resources/editor.ts`.
 
 ### Transport modes
 
-`main.ts` selects transport based on the `--stdio` flag:
-- **HTTP** (`src/server/http.ts`): Streamable HTTP via Express on `CONFIG.PORT`. Each request creates a new `McpServer` + `StreamableHTTPServerTransport` pair (stateless per-request).
+`src/index.ts` selects transport based on CLI flags (`--http` by default, or `--stdio`):
+- **HTTP** (`src/server/streamable-http.ts`): Streamable HTTP via Express on `CONFIG.PORT`. Each request creates a new `McpServer` + `StreamableHTTPServerTransport` pair (stateless per-request).
 - **stdio** (`src/server/stdio.ts`): Single `McpServer` connected to `StdioServerTransport`.
 
 ### Tool taxonomy

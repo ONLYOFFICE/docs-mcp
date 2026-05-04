@@ -4,6 +4,7 @@ import {
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { CONFIG } from "../../config.js";
+import { getTransportMode } from "../../runtime.js";
 import { EDITOR_APP_RESOURCE_URI } from "../../resources/definitions/editor.js";
 import type { McpTool } from "../index.js";
 import { formatDocumentFileUrlAccessError, validateAllowedDocumentFileUrl } from "../../domain/document-file-url-access.js";
@@ -45,7 +46,7 @@ export const openFile: McpTool = {
         if (fileUrl) {
           isLocalFile = fileUrl.startsWith("file://");
 
-          if (isLocalFile && CONFIG.TRANSPORT !== "stdio") {
+          if (isLocalFile && getTransportMode() !== "stdio") {
             return {
               content: [
                 {

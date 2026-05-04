@@ -37,8 +37,10 @@
     "build": "node scripts/build.mjs",
     "watch": "cross-env INPUT=src/ext-apps/editor/index.html vite build --watch",
     "serve": "bun --watch src/index.ts",
+    "serve:stdio": "bun --watch src/index.ts --stdio",
     "start": "cross-env NODE_ENV=development pnpm run build && pnpm run serve",
-    "dev": "cross-env NODE_ENV=development concurrently --raw \"pnpm run watch\" \"pnpm run serve\""
+    "dev": "cross-env NODE_ENV=development concurrently --raw \"pnpm run watch\" \"pnpm run serve\"",
+    "dev:stdio": "cross-env NODE_ENV=development concurrently --raw \"pnpm run watch\" \"pnpm run serve:stdio\""
   },
   "dependencies": {
     "@modelcontextprotocol/ext-apps": "^1.2.2",

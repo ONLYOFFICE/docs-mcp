@@ -102,7 +102,6 @@ function makeHostnameListSchema(defaultValue: string[] = []) {
 const EnvSchema = z.object({
   HOST: z.string().default("127.0.0.1"),
   PORT: z.coerce.number().int().positive().default(3001),
-  TRANSPORT: z.enum(["http", "stdio"]).default("http"),
   HTTP_ALLOWED_HOSTS: makeHostnameListSchema(),
   CORS_ALLOWED_ORIGINS: makeOriginListSchema("CORS_ALLOWED_ORIGINS"),
   LOCAL_FILE_ALLOWED_ROOTS: makeStringListSchema(),

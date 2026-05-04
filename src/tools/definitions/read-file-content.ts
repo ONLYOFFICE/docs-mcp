@@ -4,7 +4,7 @@ import { fileURLToPath } from "url";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { McpTool } from "../index.js";
-import { CONFIG } from "../../config.js";
+import { getTransportMode } from "../../runtime.js";
 import { formatLocalFileAccessError, resolveAllowedLocalFile } from "../../domain/local-file-access.js";
 
 export const MAX_CHUNK_BYTES = 512 * 1024;
@@ -88,7 +88,7 @@ export const readFileContent: McpTool = {
         }
 
         if (url.startsWith("file://")) {
-          if (CONFIG.TRANSPORT !== "stdio") {
+          if (getTransportMode() !== "stdio") {
             return {
               content: [],
               structuredContent: { error: `Local file access is only supported with stdio transport.` },
