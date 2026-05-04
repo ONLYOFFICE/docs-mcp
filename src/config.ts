@@ -64,10 +64,28 @@ function makeStringListSchema(defaultValue: string[] = []) {
     });
 }
 
+function makeCorsOriginListSchema(defaultValue: string[] = []) {
+  return makeStringListSchema(defaultValue).superRefine((origins, ctx) => {
+    for (const origin of origins) {
+      if (origin === "*") continue;
+
+      try {
+        new URL(origin);
+      } catch {
+        ctx.addIssue({
+          code: "custom",
+          message: `CORS_ALLOWED_ORIGINS must contain valid origins or "*", got: ${origin}`,
+        });
+      }
+    }
+  });
+}
+
 const EnvSchema = z.object({
   HOST: z.string().default("0.0.0.0"),
   PORT: z.coerce.number().int().positive().default(3001),
   TRANSPORT: z.enum(["http", "stdio"]).default("http"),
+  CORS_ALLOWED_ORIGINS: makeCorsOriginListSchema(),
   LOCAL_FILE_ALLOWED_ROOTS: makeStringListSchema(),
   DOCUMENT_SERVER_BASE_URL: z.url("DOCUMENT_SERVER_BASE_URL must be a valid URL"),
   DOCUMENT_SERVER_JWT_SECRET: z.string().min(1, "DOCUMENT_SERVER_JWT_SECRET is required"),
