@@ -1,7 +1,8 @@
 import { App } from "@modelcontextprotocol/ext-apps";
 import { DocEditorClient } from "./doc-editor-client.js";
+import packageJson from "../../../package.json" with { type: "json" };
 
-const app = new App({ name: "ONLYOFFICE Editor App", version: "1.0.0" });
+const app = new App({ name: "ONLYOFFICE Editor", version: packageJson.version });
 
 const log = {
   info: console.log.bind(console, "[ONLYOFFICE-EDITOR]"),
