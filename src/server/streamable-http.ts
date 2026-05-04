@@ -8,6 +8,11 @@ import { CONFIG } from "../config.js";
 
 const LOCALHOST_ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]"];
 
+type StreamableHTTPServerOptions = {
+  host: string;
+  port: number;
+};
+
 function normalizeOrigin(origin: string): string {
   return new URL(origin).origin;
 }
@@ -33,10 +38,11 @@ function createCorsOptions(): CorsOptions {
 }
 
 export async function startStreamableHTTPServer(
-  createServer: () => McpServer
+  createServer: () => McpServer,
+  options: StreamableHTTPServerOptions,
 ): Promise<void> {
-  const allowedHosts = [...new Set([...LOCALHOST_ALLOWED_HOSTS, CONFIG.HOST, ...CONFIG.HTTP_ALLOWED_HOSTS])];
-  const app = createMcpExpressApp({ host: CONFIG.HOST, allowedHosts });
+  const allowedHosts = [...new Set([...LOCALHOST_ALLOWED_HOSTS, options.host, ...CONFIG.HTTP_ALLOWED_HOSTS])];
+  const app = createMcpExpressApp({ host: options.host, allowedHosts });
   app.use(cors(createCorsOptions()));
 
   app.all("/mcp", async (req: Request, res: Response) => {
@@ -65,12 +71,12 @@ export async function startStreamableHTTPServer(
     }
   });
 
-  const httpServer = app.listen(CONFIG.PORT, CONFIG.HOST, (err) => {
+  const httpServer = app.listen(options.port, options.host, (err) => {
     if (err) {
       console.error("Failed to start server:", err);
       process.exit(1);
     }
-    console.log(`MCP server listening on http://${CONFIG.HOST}:${CONFIG.PORT}/mcp`);
+    console.log(`MCP server listening on http://${options.host}:${options.port}/mcp`);
   });
 
   const shutdown = () => {

@@ -11,7 +11,10 @@ async function main() {
   if (options.transport === "stdio") {
     await startStdioServer(createServer);
   } else {
-    await startStreamableHTTPServer(createServer);
+    await startStreamableHTTPServer(createServer, {
+      host: options.host,
+      port: options.port,
+    });
   }
 }
 

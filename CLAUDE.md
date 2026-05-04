@@ -8,6 +8,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Development (watch mode — rebuilds UI and restarts server on changes)
 npm start
 
+# Development HTTP transport on a custom host/port
+pnpm run serve -- --host 0.0.0.0 --port 3001
+
 # Development with stdio transport
 npm run dev:stdio
 
@@ -25,7 +28,6 @@ No test suite is configured (`npm test` exits with an error).
 Copy `.env.example` to `.env` before running:
 
 ```
-PORT=3001
 DOCUMENT_SERVER_BASE_URL=https://your-onlyoffice-instance.example.com
 ```
 
@@ -46,8 +48,8 @@ The UI is a single-file HTML bundle inlined into the MCP resource at runtime by 
 
 ### Transport modes
 
-`src/index.ts` selects transport based on CLI flags (`--http` by default, or `--stdio`):
-- **HTTP** (`src/server/streamable-http.ts`): Streamable HTTP via Express on `CONFIG.PORT`. Each request creates a new `McpServer` + `StreamableHTTPServerTransport` pair (stateless per-request).
+`src/index.ts` selects transport based on CLI flags (`--http` by default, or `--stdio`). HTTP bind options are passed with `--host` and `--port` and default to `127.0.0.1:3001`.
+- **HTTP** (`src/server/streamable-http.ts`): Streamable HTTP via Express. Each request creates a new `McpServer` + `StreamableHTTPServerTransport` pair (stateless per-request).
 - **stdio** (`src/server/stdio.ts`): Single `McpServer` connected to `StdioServerTransport`.
 
 ### Tool taxonomy
