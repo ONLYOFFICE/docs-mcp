@@ -9,9 +9,8 @@ import type { McpTool } from "../index.js";
 import { createEditorConfig } from "../../domain/document-server/editor-config.js";
 import { getDocumentType, getExtension } from "../../domain/document-server/file-utils.js";
 import { formatsProvider } from "../../domain/document-server/formats-provider.js";
+import { formatLocalFileAccessError, resolveAllowedLocalFile } from "../../domain/local-file-access.js";
 import { basename } from "path";
-import { fileURLToPath } from "url";
-import { stat } from "fs/promises";
 
 const OpenAIFileSchema = z.object({
   download_url: z.url().describe("Direct download URL of the file to open."),
@@ -58,16 +57,14 @@ export const openFile: McpTool = {
           }
 
           if (isLocalFile) {
-            const filePath = fileURLToPath(fileUrl);
+            const resolved = await resolveAllowedLocalFile(fileUrl);
 
-            try {
-              await stat(filePath);
-            } catch {
+            if (!resolved.ok) {
               return {
                 content: [
                   {
                     type: "text" as const,
-                    text: `File not found: ${fileUrl}`
+                    text: formatLocalFileAccessError(fileUrl, resolved.reason)
                   }
                 ],
                 isError: true,

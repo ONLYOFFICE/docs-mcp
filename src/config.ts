@@ -48,10 +48,27 @@ function makeToolsSchema(defaultValue: string[] | "all") {
     });
 }
 
+function makeStringListSchema(defaultValue: string[] = []) {
+  return z
+    .string()
+    .optional()
+    .transform((val): string[] => {
+      if (!val) return defaultValue;
+      try {
+        const parsed = JSON.parse(val);
+        if (Array.isArray(parsed)) {
+          return parsed.filter((item): item is string => typeof item === "string");
+        }
+      } catch {}
+      return val.split(",").map((s) => s.trim()).filter(Boolean);
+    });
+}
+
 const EnvSchema = z.object({
   HOST: z.string().default("0.0.0.0"),
   PORT: z.coerce.number().int().positive().default(3001),
   TRANSPORT: z.enum(["http", "stdio"]).default("http"),
+  LOCAL_FILE_ALLOWED_ROOTS: makeStringListSchema(),
   DOCUMENT_SERVER_BASE_URL: z.url("DOCUMENT_SERVER_BASE_URL must be a valid URL"),
   DOCUMENT_SERVER_JWT_SECRET: z.string().min(1, "DOCUMENT_SERVER_JWT_SECRET is required"),
   DOCUMENT_SERVER_JWT_ALGORITHM: z.enum(["HS256", "HS384", "HS512"]).default("HS256"),

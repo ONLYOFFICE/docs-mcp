@@ -5,6 +5,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { McpTool } from "../index.js";
 import { CONFIG } from "../../config.js";
+import { formatLocalFileAccessError, resolveAllowedLocalFile } from "../../domain/local-file-access.js";
 
 export const MAX_CHUNK_BYTES = 512 * 1024;
 
@@ -39,22 +40,6 @@ async function resolveBlankFilePath(locale: string, fileType: string): Promise<{
   }
 
   return null;
-}
-
-async function resolveLocalFilePath(uri: string): Promise<{ filePath: string; size: number } | null> {
-  let localPath: string;
-  try {
-    localPath = fileURLToPath(uri);
-  } catch {
-    localPath = uri.slice("file://".length);
-  }
-
-  try {
-    const { size } = await stat(localPath);
-    return { filePath: localPath, size };
-  } catch {
-    return null;
-  }
 }
 
 export const readFileContent: McpTool = {
@@ -110,11 +95,11 @@ export const readFileContent: McpTool = {
             };
           }
 
-          const resolved = await resolveLocalFilePath(url);
-          if (!resolved) {
+          const resolved = await resolveAllowedLocalFile(url);
+          if (!resolved.ok) {
             return {
               content: [],
-              structuredContent: { error: `Local file not found: ${url}` },
+              structuredContent: { error: formatLocalFileAccessError(url, resolved.reason) },
             };
           }
           filePath = resolved.filePath;
