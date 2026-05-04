@@ -6,6 +6,7 @@ import { z } from "zod";
 import { CONFIG } from "../../config.js";
 import { EDITOR_APP_RESOURCE_URI } from "../../resources/definitions/editor.js";
 import type { McpTool } from "../index.js";
+import { formatDocumentFileUrlAccessError, validateAllowedDocumentFileUrl } from "../../domain/document-file-url-access.js";
 import { createEditorConfig } from "../../domain/document-server/editor-config.js";
 import { getDocumentType, getExtension } from "../../domain/document-server/file-utils.js";
 import { formatsProvider } from "../../domain/document-server/formats-provider.js";
@@ -72,9 +73,37 @@ export const openFile: McpTool = {
             }
           }
 
+          if (!isLocalFile) {
+            const validated = validateAllowedDocumentFileUrl(fileUrl);
+            if (!validated.ok) {
+              return {
+                content: [
+                  {
+                    type: "text" as const,
+                    text: formatDocumentFileUrlAccessError(fileUrl, validated)
+                  }
+                ],
+                isError: true,
+              };
+            }
+          }
+
           fileName = basename(fileUrl);
           downloadUrl = fileUrl;
         } else if (openai_file) {
+          const validated = validateAllowedDocumentFileUrl(openai_file.download_url);
+          if (!validated.ok) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: formatDocumentFileUrlAccessError(openai_file.download_url, validated)
+                }
+              ],
+              isError: true,
+            };
+          }
+
           fileName = openai_file.file_name;
           downloadUrl = openai_file.download_url;
         } else {
