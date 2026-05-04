@@ -6,6 +6,8 @@ import type { CorsOptions } from "cors";
 import type { Request, Response } from "express";
 import { CONFIG } from "../config.js";
 
+const LOCALHOST_ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]"];
+
 function normalizeOrigin(origin: string): string {
   return new URL(origin).origin;
 }
@@ -33,7 +35,8 @@ function createCorsOptions(): CorsOptions {
 export async function startStreamableHTTPServer(
   createServer: () => McpServer
 ): Promise<void> {
-  const app = createMcpExpressApp({ host: CONFIG.HOST });
+  const allowedHosts = [...new Set([...LOCALHOST_ALLOWED_HOSTS, CONFIG.HOST, ...CONFIG.HTTP_ALLOWED_HOSTS])];
+  const app = createMcpExpressApp({ host: CONFIG.HOST, allowedHosts });
   app.use(cors(createCorsOptions()));
 
   app.all("/mcp", async (req: Request, res: Response) => {

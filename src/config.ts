@@ -81,10 +81,29 @@ function makeOriginListSchema(envName: string, defaultValue: string[] = []) {
   });
 }
 
+function normalizeHostname(value: string): string {
+  try {
+    return new URL(value).hostname;
+  } catch {}
+
+  try {
+    return new URL(`http://${value}`).hostname;
+  } catch {
+    return value;
+  }
+}
+
+function makeHostnameListSchema(defaultValue: string[] = []) {
+  return makeStringListSchema(defaultValue).transform((hosts) =>
+    hosts.map((host) => normalizeHostname(host)).filter(Boolean),
+  );
+}
+
 const EnvSchema = z.object({
-  HOST: z.string().default("0.0.0.0"),
+  HOST: z.string().default("127.0.0.1"),
   PORT: z.coerce.number().int().positive().default(3001),
   TRANSPORT: z.enum(["http", "stdio"]).default("http"),
+  HTTP_ALLOWED_HOSTS: makeHostnameListSchema(),
   CORS_ALLOWED_ORIGINS: makeOriginListSchema("CORS_ALLOWED_ORIGINS"),
   LOCAL_FILE_ALLOWED_ROOTS: makeStringListSchema(),
   DOCUMENT_FILE_URL_ALLOWED_ORIGINS: makeOriginListSchema("DOCUMENT_FILE_URL_ALLOWED_ORIGINS"),
