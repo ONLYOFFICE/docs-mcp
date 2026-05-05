@@ -5,7 +5,7 @@ process.env.DOCUMENT_SERVER_JWT_SECRET = "test-secret";
 
 describe("FormatsProvider", () => {
   test("fetches document formats from the Document Server metadata endpoint", async () => {
-    const { FormatsProvider } = await import("../../src/domain/document-server/formats-provider.ts");
+    const { FormatsProvider } = await import("../../../src/domain/document-server/formats-provider.ts");
     const calls: string[] = [];
     const fetchImpl = async (url: string) => {
       calls.push(url);
@@ -20,7 +20,7 @@ describe("FormatsProvider", () => {
   });
 
   test("uses cached document formats within the cache TTL", async () => {
-    const { FormatsProvider } = await import("../../src/domain/document-server/formats-provider.ts");
+    const { FormatsProvider } = await import("../../../src/domain/document-server/formats-provider.ts");
     let callCount = 0;
     const fetchImpl = async () => {
       callCount += 1;
@@ -34,7 +34,7 @@ describe("FormatsProvider", () => {
   });
 
   test("throws when the Document Server metadata request fails", async () => {
-    const { FormatsProvider } = await import("../../src/domain/document-server/formats-provider.ts");
+    const { FormatsProvider } = await import("../../../src/domain/document-server/formats-provider.ts");
     const fetchImpl = async () => new Response("nope", { status: 503, statusText: "Unavailable" });
     const provider = new FormatsProvider("https://document-server.example", fetchImpl);
 
@@ -44,7 +44,7 @@ describe("FormatsProvider", () => {
   });
 
   test("finds formats by extension", async () => {
-    const { FormatsProvider } = await import("../../src/domain/document-server/formats-provider.ts");
+    const { FormatsProvider } = await import("../../../src/domain/document-server/formats-provider.ts");
     const provider = new FormatsProvider("https://document-server.example", async () =>
       jsonResponse([
         { name: "docx", type: "word", actions: ["edit"], convert: [], mime: [] },
@@ -63,7 +63,7 @@ describe("FormatsProvider", () => {
   });
 
   test("lists only viewable extensions", async () => {
-    const { FormatsProvider } = await import("../../src/domain/document-server/formats-provider.ts");
+    const { FormatsProvider } = await import("../../../src/domain/document-server/formats-provider.ts");
     const provider = new FormatsProvider("https://document-server.example", async () =>
       jsonResponse([
         { name: "docx", type: "word", actions: ["edit"], convert: [], mime: [] },

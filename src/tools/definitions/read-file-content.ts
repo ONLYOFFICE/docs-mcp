@@ -4,8 +4,12 @@ import { fileURLToPath } from "url";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { McpTool } from "../index.js";
-import { getTransportMode } from "../../runtime.js";
-import { formatLocalFileAccessError, resolveAllowedLocalFile } from "../../domain/local-file-access.js";
+import { getTransportMode, type TransportMode } from "../../runtime.js";
+import {
+  formatLocalFileAccessError,
+  resolveAllowedLocalFile,
+  type LocalFileAccessResult,
+} from "../../domain/local-file-access.js";
 
 export const MAX_CHUNK_BYTES = 512 * 1024;
 
@@ -42,6 +46,107 @@ async function resolveBlankFilePath(locale: string, fileType: string): Promise<{
   return null;
 }
 
+type ReadFileContentInput = {
+  url: string;
+  offset: number;
+  byteCount: number;
+};
+
+type ReadFileContentDeps = {
+  getTransportMode?: () => TransportMode;
+  resolveAllowedLocalFile?: (uri: string) => Promise<LocalFileAccessResult>;
+};
+
+export function createReadFileContentHandler(deps: ReadFileContentDeps = {}) {
+  const getMode = deps.getTransportMode ?? getTransportMode;
+  const resolveLocalFile = deps.resolveAllowedLocalFile ?? resolveAllowedLocalFile;
+
+  return async ({ url, offset, byteCount }: ReadFileContentInput) => {
+    let filePath: string | undefined = undefined;
+    let totalBytes: number = 0;
+
+    if (url.startsWith("blank://")) {
+      const parts = url.slice("blank://".length).split("/");
+      if (parts.length !== 2 || !parts[0] || !parts[1]) {
+        return {
+          content: [],
+          structuredContent: { error: `Invalid blank URL: ${url}` },
+        };
+      }
+
+      const [locale, fileType] = parts;
+      const resolved = await resolveBlankFilePath(locale, fileType);
+
+      if (!resolved) {
+        return {
+          content: [],
+          structuredContent: { error: `Template not found for locale "${locale}", type "${fileType}".` },
+        };
+      }
+
+      filePath = resolved.filePath;
+      totalBytes = resolved.size;
+    }
+
+    if (url.startsWith("file://")) {
+      if (getMode() !== "stdio") {
+        return {
+          content: [],
+          structuredContent: { error: `Local file access is only supported with stdio transport.` },
+        };
+      }
+
+      const resolved = await resolveLocalFile(url);
+      if (!resolved.ok) {
+        return {
+          content: [],
+          structuredContent: { error: formatLocalFileAccessError(url, resolved.reason) },
+        };
+      }
+      filePath = resolved.filePath;
+      totalBytes = resolved.size;
+    }
+
+    if (!filePath) {
+      return {
+        content: [],
+        structuredContent: { error: `Invalid path format. Expected blank://{locale}/{fileType} or file:// URL, got: ${url}` },
+      };
+    }
+
+    let data: Buffer;
+    try {
+      const fh = await open(filePath, "r");
+      try {
+        const buf = Buffer.allocUnsafe(byteCount);
+        const { bytesRead } = await fh.read(buf, 0, byteCount, offset);
+        data = buf.subarray(0, bytesRead);
+      } finally {
+        await fh.close();
+      }
+    } catch {
+      return {
+        content: [],
+        structuredContent: { error: `Failed to read file.` },
+      };
+    }
+
+    const bytes = data.toString("base64");
+    const hasMore = offset + data.length < totalBytes;
+
+    return {
+      content: [],
+      structuredContent: {
+        bytes,
+        offset,
+        byteCount: data.length,
+        totalBytes,
+        hasMore,
+      },
+    };
+  };
+}
+
 export const readFileContent: McpTool = {
   register(server: McpServer): void {
     server.registerTool(
@@ -60,90 +165,7 @@ export const readFileContent: McpTool = {
         },
         _meta: { visibility: ["app"] },
       },
-      async ({ url, offset, byteCount }) => {
-        let filePath: string | undefined = undefined;
-        let totalBytes: number = 0;
-
-        if (url.startsWith("blank://")) {
-          const parts = url.slice("blank://".length).split("/");
-          if (parts.length !== 2 || !parts[0] || !parts[1]) {
-            return {
-              content: [],
-              structuredContent: { error: `Invalid blank URL: ${url}` },
-            };
-          }
-
-          const [locale, fileType] = parts;
-          const resolved = await resolveBlankFilePath(locale, fileType);
-
-          if (!resolved) {
-            return {
-              content: [],
-              structuredContent: { error: `Template not found for locale "${locale}", type "${fileType}".` },
-            };
-          }
-
-          filePath = resolved.filePath;
-          totalBytes = resolved.size;
-        }
-
-        if (url.startsWith("file://")) {
-          if (getTransportMode() !== "stdio") {
-            return {
-              content: [],
-              structuredContent: { error: `Local file access is only supported with stdio transport.` },
-            };
-          }
-
-          const resolved = await resolveAllowedLocalFile(url);
-          if (!resolved.ok) {
-            return {
-              content: [],
-              structuredContent: { error: formatLocalFileAccessError(url, resolved.reason) },
-            };
-          }
-          filePath = resolved.filePath;
-          totalBytes = resolved.size;
-        } 
-        
-        if (!filePath) {
-          return {
-            content: [],
-            structuredContent: { error: `Invalid path format. Expected blank://{locale}/{fileType} or file:// URL, got: ${url}` },
-          };
-        }
-
-        let data: Buffer;
-        try {
-          const fh = await open(filePath, "r");
-          try {
-            const buf = Buffer.allocUnsafe(byteCount);
-            const { bytesRead } = await fh.read(buf, 0, byteCount, offset);
-            data = buf.subarray(0, bytesRead);
-          } finally {
-            await fh.close();
-          }
-        } catch {
-          return {
-            content: [],
-            structuredContent: { error: `Failed to read file.` },
-          };
-        }
-
-        const bytes = data.toString("base64");
-        const hasMore = offset + data.length < totalBytes;
-
-        return {
-          content: [],
-          structuredContent: {
-            bytes,
-            offset,
-            byteCount: data.length,
-            totalBytes,
-            hasMore,
-          },
-        };
-      }
+      createReadFileContentHandler()
     );
   },
 };

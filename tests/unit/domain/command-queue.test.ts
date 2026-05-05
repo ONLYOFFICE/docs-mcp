@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { CommandQueue, CommandTimeoutError } from "../../src/domain/editor-session/command-queue.ts";
+import { CommandQueue, CommandTimeoutError } from "../../../src/domain/editor-session/command-queue.ts";
 
 describe("CommandQueue", () => {
   test("poll returns each queued command only once", () => {

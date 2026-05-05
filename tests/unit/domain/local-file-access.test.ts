@@ -19,7 +19,7 @@ describe("local-file-access", () => {
   });
 
   test("rejects invalid local file URLs", async () => {
-    const { resolveAllowedLocalFile } = await import("../../src/domain/local-file-access.ts");
+    const { resolveAllowedLocalFile } = await import("../../../src/domain/local-file-access.ts");
 
     expect(await resolveAllowedLocalFile("not-a-file-url", [tempRoot])).toEqual({
       ok: false,
@@ -28,7 +28,7 @@ describe("local-file-access", () => {
   });
 
   test("requires configured allowed roots", async () => {
-    const { resolveAllowedLocalFile } = await import("../../src/domain/local-file-access.ts");
+    const { resolveAllowedLocalFile } = await import("../../../src/domain/local-file-access.ts");
     const filePath = path.join(tempRoot, "document.docx");
     await writeFile(filePath, "content");
 
@@ -39,7 +39,7 @@ describe("local-file-access", () => {
   });
 
   test("rejects missing files", async () => {
-    const { resolveAllowedLocalFile } = await import("../../src/domain/local-file-access.ts");
+    const { resolveAllowedLocalFile } = await import("../../../src/domain/local-file-access.ts");
     const filePath = path.join(tempRoot, "missing.docx");
 
     expect(await resolveAllowedLocalFile(pathToFileURL(filePath).toString(), [tempRoot])).toEqual({
@@ -49,7 +49,7 @@ describe("local-file-access", () => {
   });
 
   test("rejects files outside allowed roots", async () => {
-    const { resolveAllowedLocalFile } = await import("../../src/domain/local-file-access.ts");
+    const { resolveAllowedLocalFile } = await import("../../../src/domain/local-file-access.ts");
     const allowedRoot = path.join(tempRoot, "allowed");
     const outsideRoot = path.join(tempRoot, "outside");
     const filePath = path.join(outsideRoot, "document.docx");
@@ -64,7 +64,7 @@ describe("local-file-access", () => {
   });
 
   test("allows files inside allowed roots", async () => {
-    const { resolveAllowedLocalFile } = await import("../../src/domain/local-file-access.ts");
+    const { resolveAllowedLocalFile } = await import("../../../src/domain/local-file-access.ts");
     const filePath = path.join(tempRoot, "document.docx");
     await writeFile(filePath, "content");
     const resolvedFilePath = await realpath(filePath);
@@ -79,7 +79,7 @@ describe("local-file-access", () => {
   });
 
   test("formats access errors", async () => {
-    const { formatLocalFileAccessError } = await import("../../src/domain/local-file-access.ts");
+    const { formatLocalFileAccessError } = await import("../../../src/domain/local-file-access.ts");
 
     expect(formatLocalFileAccessError("file://bad", "invalid_url")).toBe(
       "Invalid local file URL: file://bad",
