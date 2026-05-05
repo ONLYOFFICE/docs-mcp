@@ -1,7 +1,26 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { commandQueue } from "../../domain/editor-session/command-queue.js";
+import { commandQueue, type Command } from "../../domain/editor-session/command-queue.js";
 import type { McpTool } from "../index.js";
+
+type PollEditorCommandsInput = {
+  sessionId: string;
+};
+
+type PollEditorCommandsDeps = {
+  commandQueue?: {
+    longPoll(sessionId: string): Promise<Command[]>;
+  };
+};
+
+export function createPollEditorCommandsHandler(deps: PollEditorCommandsDeps = {}) {
+  const queue = deps.commandQueue ?? commandQueue;
+
+  return async ({ sessionId }: PollEditorCommandsInput) => {
+    const commands = await queue.longPoll(sessionId);
+    return { content: [], structuredContent: { commands } };
+  };
+}
 
 export const pollEditorCommands: McpTool = {
   register(server: McpServer): void {
@@ -14,10 +33,7 @@ export const pollEditorCommands: McpTool = {
         },
         _meta: { visibility: ["app"] },
       },
-      async ({ sessionId }) => {
-        const commands = await commandQueue.longPoll(sessionId);
-        return { content: [], structuredContent: { commands } };
-      }
+      createPollEditorCommandsHandler()
     );
   },
 };
