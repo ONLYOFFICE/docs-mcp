@@ -36,7 +36,7 @@ function localFileUrlToPath(uri: string): string | null {
 
 async function getAllowedRoots(): Promise<string[]> {
   allowedRootsCache ??= Promise.all(
-    CONFIG.LOCAL_FILE_ALLOWED_ROOTS.map(async (root) => {
+    CONFIG.STDIO_LOCAL_FILE_ALLOWED_ROOTS.map(async (root) => {
       try {
         return normalizeForCompare(await realpath(path.resolve(root)));
       } catch {
@@ -80,7 +80,7 @@ export function formatLocalFileAccessError(uri: string, reason: LocalFileAccessE
     case "invalid_url":
       return `Invalid local file URL: ${uri}`;
     case "not_configured":
-      return "Local file access is not configured. Set LOCAL_FILE_ALLOWED_ROOTS to one or more allowed directories.";
+      return "Local file access is not configured. Set STDIO_LOCAL_FILE_ALLOWED_ROOTS to one or more allowed directories.";
     case "not_found":
       return `Local file not found: ${uri}`;
     case "outside_allowed_roots":

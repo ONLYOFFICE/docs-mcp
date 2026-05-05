@@ -7,20 +7,37 @@ This server supports both MCP transports:
 
 ## Required Configuration
 
-Set these environment variables for both transports:
+### Shared
 
 ```sh
 DOCUMENT_SERVER_BASE_URL=https://your-onlyoffice-instance.example.com
 DOCUMENT_SERVER_JWT_SECRET=your-secret
+DOCUMENT_FILE_URL_ALLOWED_ORIGINS=https://files.example.com
 ```
 
-For local `file://` access with stdio, also set:
+These variables are used by both transports.
+
+### stdio Transport
 
 ```sh
-LOCAL_FILE_ALLOWED_ROOTS=/projects
+STDIO_LOCAL_FILE_ALLOWED_ROOTS=/projects
 ```
 
-The value must point to paths inside the container, not host paths.
+Set `STDIO_LOCAL_FILE_ALLOWED_ROOTS` only when local `file://` access is needed
+with stdio. The value must point to paths inside the container, not host paths.
+
+### HTTP Transport
+
+HTTP-only variables use the `HTTP_` prefix:
+
+```sh
+HTTP_ALLOWED_HOSTS=localhost,127.0.0.1
+HTTP_TRUST_PROXY=1
+HTTP_CORS_ALLOWED_ORIGINS=http://localhost:3000
+HTTP_RATE_LIMIT_WINDOW_MS=60000
+HTTP_RATE_LIMIT_MAX_REQUESTS=120
+HTTP_RATE_LIMIT_MAX_IN_FLIGHT=20
+```
 
 ## Build the Docker Image
 
@@ -43,7 +60,7 @@ Example MCP client configuration:
         "--rm",
         "-e", "DOCUMENT_SERVER_BASE_URL=https://your-onlyoffice-instance.example.com",
         "-e", "DOCUMENT_SERVER_JWT_SECRET=your-secret",
-        "-e", "LOCAL_FILE_ALLOWED_ROOTS=/projects",
+        "-e", "STDIO_LOCAL_FILE_ALLOWED_ROOTS=/projects",
         "--mount", "type=bind,src=/Users/username/Desktop,dst=/projects/Desktop",
         "--mount", "type=bind,src=/path/to/other/allowed/dir,dst=/projects/other/allowed/dir,ro",
         "--mount", "type=bind,src=/path/to/file.txt,dst=/projects/path/to/file.txt,ro",
@@ -71,7 +88,7 @@ docker run --rm \
   -e DOCUMENT_SERVER_BASE_URL=https://your-onlyoffice-instance.example.com \
   -e DOCUMENT_SERVER_JWT_SECRET=your-secret \
   -e HTTP_ALLOWED_HOSTS=localhost,127.0.0.1 \
-  -e CORS_ALLOWED_ORIGINS=http://localhost:3000 \
+  -e HTTP_CORS_ALLOWED_ORIGINS=http://localhost:3000 \
   onlyoffice/docs-mcp
 ```
 

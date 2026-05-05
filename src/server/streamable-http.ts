@@ -19,9 +19,9 @@ function normalizeOrigin(origin: string): string {
 }
 
 function createCorsOptions(): CorsOptions {
-  const allowAllOrigins = CONFIG.CORS_ALLOWED_ORIGINS.includes("*");
+  const allowAllOrigins = CONFIG.HTTP_CORS_ALLOWED_ORIGINS.includes("*");
   const allowedOrigins = new Set(
-    CONFIG.CORS_ALLOWED_ORIGINS
+    CONFIG.HTTP_CORS_ALLOWED_ORIGINS
       .filter((origin) => origin !== "*")
       .map((origin) => normalizeOrigin(origin)),
   );

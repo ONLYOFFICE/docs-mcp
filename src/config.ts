@@ -119,14 +119,24 @@ function makeTrustProxySchema() {
     });
 }
 
+function applyEnvAliases(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  return {
+    ...env,
+    STDIO_LOCAL_FILE_ALLOWED_ROOTS:
+      env.STDIO_LOCAL_FILE_ALLOWED_ROOTS ?? env.LOCAL_FILE_ALLOWED_ROOTS,
+    HTTP_CORS_ALLOWED_ORIGINS:
+      env.HTTP_CORS_ALLOWED_ORIGINS ?? env.CORS_ALLOWED_ORIGINS,
+  };
+}
+
 const EnvSchema = z.object({
   HTTP_ALLOWED_HOSTS: makeHostnameListSchema(),
   HTTP_TRUST_PROXY: makeTrustProxySchema(),
   HTTP_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
   HTTP_RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(120),
   HTTP_RATE_LIMIT_MAX_IN_FLIGHT: z.coerce.number().int().positive().default(20),
-  CORS_ALLOWED_ORIGINS: makeOriginListSchema("CORS_ALLOWED_ORIGINS"),
-  LOCAL_FILE_ALLOWED_ROOTS: makeStringListSchema(),
+  HTTP_CORS_ALLOWED_ORIGINS: makeOriginListSchema("HTTP_CORS_ALLOWED_ORIGINS"),
+  STDIO_LOCAL_FILE_ALLOWED_ROOTS: makeStringListSchema(),
   DOCUMENT_FILE_URL_ALLOWED_ORIGINS: makeOriginListSchema("DOCUMENT_FILE_URL_ALLOWED_ORIGINS"),
   DOCUMENT_SERVER_BASE_URL: z.url("DOCUMENT_SERVER_BASE_URL must be a valid URL"),
   DOCUMENT_SERVER_JWT_SECRET: z.string().min(1, "DOCUMENT_SERVER_JWT_SECRET is required"),
@@ -142,4 +152,4 @@ const EnvSchema = z.object({
   DOCUMENT_SERVER_AI_PDF_TOOLS_DISABLED: makeToolsSchema("all"),
 });
 
-export const CONFIG = EnvSchema.parse(process.env);
+export const CONFIG = EnvSchema.parse(applyEnvAliases(process.env));
