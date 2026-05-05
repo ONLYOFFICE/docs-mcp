@@ -44,6 +44,7 @@ export async function startStreamableHTTPServer(
 ): Promise<void> {
   const allowedHosts = [...new Set([...LOCALHOST_ALLOWED_HOSTS, options.host, ...CONFIG.HTTP_ALLOWED_HOSTS])];
   const app = createMcpExpressApp({ host: options.host, allowedHosts });
+  app.set("trust proxy", CONFIG.HTTP_TRUST_PROXY);
   app.use(cors(createCorsOptions()));
   app.use(createHttpRateLimitMiddleware({
     windowMs: CONFIG.HTTP_RATE_LIMIT_WINDOW_MS,

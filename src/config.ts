@@ -99,8 +99,29 @@ function makeHostnameListSchema(defaultValue: string[] = []) {
   );
 }
 
+function makeTrustProxySchema() {
+  return z
+    .string()
+    .optional()
+    .transform((val): boolean | number | string => {
+      if (!val) return false;
+
+      const normalized = val.trim().toLowerCase();
+      if (!normalized || normalized === "false") return false;
+      if (normalized === "true") return true;
+
+      const numericValue = Number(normalized);
+      if (Number.isInteger(numericValue) && numericValue >= 0) {
+        return numericValue;
+      }
+
+      return val;
+    });
+}
+
 const EnvSchema = z.object({
   HTTP_ALLOWED_HOSTS: makeHostnameListSchema(),
+  HTTP_TRUST_PROXY: makeTrustProxySchema(),
   HTTP_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
   HTTP_RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(120),
   HTTP_RATE_LIMIT_MAX_IN_FLIGHT: z.coerce.number().int().positive().default(20),

@@ -81,6 +81,14 @@ The MCP endpoint is:
 http://localhost:3000/mcp
 ```
 
+If the HTTP server is behind a reverse proxy that sends `X-Forwarded-For`
+(for example nginx, Traefik, or ngrok), configure Express to trust the proxy
+hop used by your deployment:
+
+```sh
+HTTP_TRUST_PROXY=1
+```
+
 You can override the default port with command-line arguments:
 
 ```sh
