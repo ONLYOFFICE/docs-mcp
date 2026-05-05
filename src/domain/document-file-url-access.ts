@@ -14,7 +14,10 @@ function normalizeOrigin(origin: string): string {
   return new URL(origin).origin;
 }
 
-export function validateAllowedDocumentFileUrl(url: string): DocumentFileUrlAccessResult {
+export function validateAllowedDocumentFileUrl(
+  url: string,
+  allowedOriginsConfig = CONFIG.FILE_URL_ALLOWED_ORIGINS,
+): DocumentFileUrlAccessResult {
   let parsed: URL;
   try {
     parsed = new URL(url);
@@ -26,7 +29,6 @@ export function validateAllowedDocumentFileUrl(url: string): DocumentFileUrlAcce
     return { ok: false, reason: "unsupported_protocol", origin: parsed.origin };
   }
 
-  const allowedOriginsConfig = CONFIG.FILE_URL_ALLOWED_ORIGINS;
   if (allowedOriginsConfig.length === 0) {
     return { ok: false, reason: "not_configured", origin: parsed.origin };
   }
