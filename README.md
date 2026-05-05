@@ -114,6 +114,40 @@ docker run --rm -p 8080:8080 onlyoffice/docs-mcp --http --host 0.0.0.0 --port 80
 
 Local `file://` URLs are intentionally supported only over stdio transport.
 
+## Tools
+
+The server exposes tools for creating, opening, editing, and saving files. A
+typical editing flow is:
+
+1. Open or create a file with `open_file` or `create_file`.
+2. Discover editor-specific tools with `list_editor_tools`.
+3. Execute editor actions with `call_editor_tool`.
+4. Save the result with `save_file`.
+
+### Server tools
+
+These tools are the main MCP interface for creating, opening, editing, and
+saving files.
+
+| Tool | Purpose |
+| --- | --- |
+| `create_file` | Creates a blank DOCX, XLSX, or PPTX file and opens it for editing. |
+| `open_file` | Opens an existing file from a URL, uploaded file, or allowed local `file://` URL in stdio mode. |
+| `list_editor_tools` | Lists the editor tools available for the current session and document type. |
+| `call_editor_tool` | Executes a named editor tool returned by `list_editor_tools`. |
+| `save_file` | Triggers download of the currently open document. |
+
+### App tools
+
+These tools support embedded app integrations and are not intended to be called
+directly.
+
+| Tool | Purpose |
+| --- | --- |
+| `poll_editor_commands` | Long-polls queued commands for an embedded app integration. |
+| `set_editor_command_result` | Reports command execution results from an embedded app integration back to the server. |
+| `read_file_content` | Streams blank templates or allowed local files as base64 chunks. |
+
 ## Configuration
 
 The server is configured with command-line options and environment variables.
