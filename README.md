@@ -118,6 +118,14 @@ The MCP endpoint is:
 http://localhost:3001/mcp
 ```
 
+The HTTP health check endpoint is:
+
+```text
+http://localhost:3001/health
+```
+
+It returns `200` when the HTTP server is running.
+
 Configure an MCP client that supports Streamable HTTP to use this endpoint.
 
 ### Streamable HTTP with npm
@@ -136,6 +144,12 @@ The MCP endpoint is:
 
 ```text
 http://localhost:3001/mcp
+```
+
+The HTTP health check endpoint is:
+
+```text
+http://localhost:3001/health
 ```
 
 Configure an MCP client that supports Streamable HTTP to use this endpoint.

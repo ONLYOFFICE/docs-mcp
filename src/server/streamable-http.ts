@@ -14,6 +14,11 @@ type StreamableHTTPServerOptions = {
   port: number;
 };
 
+type HealthCheckResult = {
+  status: "ok";
+  timestamp: string;
+};
+
 function normalizeOrigin(origin: string): string {
   return new URL(origin).origin;
 }
@@ -38,6 +43,15 @@ function createCorsOptions(): CorsOptions {
   };
 }
 
+function handleHealthCheck(_req: Request, res: Response): void {
+  const result: HealthCheckResult = {
+    status: "ok",
+    timestamp: new Date().toISOString(),
+  };
+
+  res.status(200).json(result);
+}
+
 export async function startStreamableHTTPServer(
   createServer: () => McpServer,
   options: StreamableHTTPServerOptions,
@@ -53,6 +67,8 @@ export async function startStreamableHTTPServer(
   app.use(createInFlightLimitMiddleware({
     maxRequests: CONFIG.HTTP_RATE_LIMIT_MAX_IN_FLIGHT,
   }));
+
+  app.get("/health", handleHealthCheck);
 
   app.all("/mcp", async (req: Request, res: Response) => {
     const server = createServer();
