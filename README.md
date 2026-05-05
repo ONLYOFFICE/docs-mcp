@@ -12,7 +12,7 @@ This server supports both MCP transports:
 ```sh
 DOCUMENT_SERVER_BASE_URL=https://your-onlyoffice-instance.example.com
 DOCUMENT_SERVER_JWT_SECRET=your-secret
-DOCUMENT_FILE_URL_ALLOWED_ORIGINS=https://files.example.com
+FILE_URL_ALLOWED_ORIGINS=https://files.example.com
 ```
 
 These variables are used by both transports.
