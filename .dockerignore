@@ -1,0 +1,10 @@
+.git
+.claude
+.env
+.pnpm-store
+dist
+node_modules
+npm-debug.log
+pnpm-debug.log
+Dockerfile
+*.local
