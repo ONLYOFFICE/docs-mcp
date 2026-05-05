@@ -119,18 +119,6 @@ function makeTrustProxySchema() {
     });
 }
 
-function applyEnvAliases(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
-  return {
-    ...env,
-    STDIO_LOCAL_FILE_ALLOWED_ROOTS:
-      env.STDIO_LOCAL_FILE_ALLOWED_ROOTS ?? env.LOCAL_FILE_ALLOWED_ROOTS,
-    HTTP_CORS_ALLOWED_ORIGINS:
-      env.HTTP_CORS_ALLOWED_ORIGINS ?? env.CORS_ALLOWED_ORIGINS,
-    FILE_URL_ALLOWED_ORIGINS:
-      env.FILE_URL_ALLOWED_ORIGINS ?? env.DOCUMENT_FILE_URL_ALLOWED_ORIGINS,
-  };
-}
-
 const EnvSchema = z.object({
   HTTP_ALLOWED_HOSTS: makeHostnameListSchema(),
   HTTP_TRUST_PROXY: makeTrustProxySchema(),
@@ -154,4 +142,4 @@ const EnvSchema = z.object({
   DOCUMENT_SERVER_AI_PDF_TOOLS_DISABLED: makeToolsSchema("all"),
 });
 
-export const CONFIG = EnvSchema.parse(applyEnvAliases(process.env));
+export const CONFIG = EnvSchema.parse(process.env);
