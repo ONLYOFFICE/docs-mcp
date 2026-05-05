@@ -33,7 +33,7 @@ HTTP-only variables use the `HTTP_` prefix:
 ```sh
 HTTP_ALLOWED_HOSTS=localhost,127.0.0.1
 HTTP_TRUST_PROXY=1
-HTTP_CORS_ALLOWED_ORIGINS=http://localhost:3000
+HTTP_CORS_ALLOWED_ORIGINS=http://localhost:3001
 HTTP_RATE_LIMIT_WINDOW_MS=60000
 HTTP_RATE_LIMIT_MAX_REQUESTS=120
 HTTP_RATE_LIMIT_MAX_IN_FLIGHT=20
@@ -84,18 +84,18 @@ Run the HTTP server:
 
 ```sh
 docker run --rm \
-  -p 3000:3000 \
+  -p 3001:3001 \
   -e DOCUMENT_SERVER_BASE_URL=https://your-onlyoffice-instance.example.com \
   -e DOCUMENT_SERVER_JWT_SECRET=your-secret \
   -e HTTP_ALLOWED_HOSTS=localhost,127.0.0.1 \
-  -e HTTP_CORS_ALLOWED_ORIGINS=http://localhost:3000 \
+  -e HTTP_CORS_ALLOWED_ORIGINS=http://localhost:3001 \
   onlyoffice/docs-mcp
 ```
 
 The MCP endpoint is:
 
 ```text
-http://localhost:3000/mcp
+http://localhost:3001/mcp
 ```
 
 If the HTTP server is behind a reverse proxy that sends `X-Forwarded-For`
@@ -113,3 +113,71 @@ docker run --rm -p 8080:8080 onlyoffice/docs-mcp --http --host 0.0.0.0 --port 80
 ```
 
 Local `file://` URLs are intentionally supported only over stdio transport.
+
+## Configuration
+
+The server is configured with command-line options and environment variables.
+Command-line options select the transport and listener, while environment
+variables provide deployment-specific settings such as secrets and server URLs.
+
+The server validates configuration on startup and fails fast when a required
+value is missing or invalid.
+
+### Command-line options
+
+Use CLI options to select the MCP transport and, for Streamable HTTP, the
+listener address.
+
+| CLI option | Required | Default | Description |
+| --- | --- | --- | --- |
+| `--stdio` | No | Disabled | Starts the server with stdio transport. Cannot be used together with `--http`. |
+| `--http` | No | Enabled | Starts the server with Streamable HTTP transport. This is the default when no transport option is provided. Cannot be used together with `--stdio`. |
+| `--host <host>` | No | `127.0.0.1` | Host interface for Streamable HTTP. The Docker image overrides this to `0.0.0.0` in its default command. |
+| `--port <port>` | No | `3001` | Port for Streamable HTTP. Must be an integer from `1` to `65535`. |
+
+### Environment variables
+
+Use environment variables for deployment-specific settings. List-style values can
+be provided as comma-separated strings or JSON arrays. Tool allowlists and
+blocklists also accept `all`.
+
+#### Shared
+
+These variables are used by both `stdio` and Streamable HTTP transports.
+
+| Environment variable | Required | Default | Description |
+| --- | --- | --- | --- |
+| `DOCUMENT_SERVER_BASE_URL` | Yes | `<not set>` | Base URL of the ONLYOFFICE Document Server. Must be a valid URL. |
+| `DOCUMENT_SERVER_JWT_SECRET` | Yes | `<not set>` | JWT secret used to sign editor configuration tokens. |
+| `DOCUMENT_SERVER_JWT_ALGORITHM` | No | `HS256` | JWT signing algorithm. Supported values: `HS256`, `HS384`, `HS512`. |
+| `DOCUMENT_SERVER_JWT_EXPIRES_IN` | No | `60` | JWT token lifetime in seconds. |
+| `FILE_URL_ALLOWED_ORIGINS` | No | `<empty>` | Allowed origins for remote `http://` and `https://` document file URLs. Use `*` to allow any origin. |
+| `DOCUMENT_SERVER_AI_WORD_TOOLS_ENABLED` | No | `insertPage`<br>`changeParagraphStyle`<br>`changeTextStyle`<br>`writeMacro` | Word editor AI tools available through `list_editor_tools`. Set to `all` to allow every Word tool reported by the editor. |
+| `DOCUMENT_SERVER_AI_WORD_TOOLS_DISABLED` | No | `<empty>` | Word editor AI tools to hide even if enabled. Set to `all` to hide every Word tool. |
+| `DOCUMENT_SERVER_AI_CELL_TOOLS_ENABLED` | No | `addAboveAverage`<br>`addCellValueCondition`<br>`addChart`<br>`addColorScale`<br>`addConditionalFormatting`<br>`addDataBars`<br>`addIconSet`<br>`addTop10Condition`<br>`addUniqueValues`<br>`clearConditionalFormatting`<br>`formatTable`<br>`changeTextStyle`<br>`writeMacro` | Spreadsheet editor AI tools available through `list_editor_tools`. Set to `all` to allow every spreadsheet tool reported by the editor. |
+| `DOCUMENT_SERVER_AI_CELL_TOOLS_DISABLED` | No | `<empty>` | Spreadsheet editor AI tools to hide even if enabled. Set to `all` to hide every spreadsheet tool. |
+| `DOCUMENT_SERVER_AI_SLIDE_TOOLS_ENABLED` | No | `addNewSlide`<br>`addShapeToSlide`<br>`addTableToSlide`<br>`addTextToPlaceholder`<br>`changeSlideBackground`<br>`deleteSlide`<br>`duplicateSlide`<br>`writeMacro` | Presentation editor AI tools available through `list_editor_tools`. Set to `all` to allow every presentation tool reported by the editor. |
+| `DOCUMENT_SERVER_AI_SLIDE_TOOLS_DISABLED` | No | `<empty>` | Presentation editor AI tools to hide even if enabled. Set to `all` to hide every presentation tool. |
+| `DOCUMENT_SERVER_AI_PDF_TOOLS_ENABLED` | No | `<empty>` | PDF editor AI tools available through `list_editor_tools`. Set to `all` to allow every PDF tool reported by the editor. |
+| `DOCUMENT_SERVER_AI_PDF_TOOLS_DISABLED` | No | `all` | PDF editor AI tools to hide even if enabled. Set to `all` to hide every PDF tool. |
+
+#### stdio
+
+These variables apply only when the server is started with `--stdio`.
+
+| Environment variable | Required | Default | Description |
+| --- | --- | --- | --- |
+| `STDIO_LOCAL_FILE_ALLOWED_ROOTS` | No | `<empty>` | Allowed local directories for `file://` document access in stdio mode. The paths must be visible inside the running process or container. |
+
+#### Streamable HTTP
+
+These variables apply only when the server is started with `--http`.
+
+| Environment variable | Required | Default | Description |
+| --- | --- | --- | --- |
+| `HTTP_ALLOWED_HOSTS` | No | `<empty>` | Additional hostnames accepted by the Streamable HTTP server. `localhost`, `127.0.0.1`, `[::1]`, and the configured `--host` value are always allowed. |
+| `HTTP_TRUST_PROXY` | No | `false` | Express `trust proxy` setting. Accepts `false`, `true`, a non-negative integer, or a custom trust proxy value. |
+| `HTTP_CORS_ALLOWED_ORIGINS` | No | `<empty>` | Browser origins allowed by CORS. Use `*` to allow any origin. Requests without an `Origin` header are allowed. |
+| `HTTP_RATE_LIMIT_WINDOW_MS` | No | `60000` | HTTP rate limit window in milliseconds. |
+| `HTTP_RATE_LIMIT_MAX_REQUESTS` | No | `120` | Maximum HTTP requests per client within the rate limit window. |
+| `HTTP_RATE_LIMIT_MAX_IN_FLIGHT` | No | `20` | Maximum concurrent HTTP requests per client. |
