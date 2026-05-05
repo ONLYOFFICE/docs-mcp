@@ -1,51 +1,41 @@
 # ONLYOFFICE Docs MCP Server
 
-This server supports both MCP transports:
+The ONLYOFFICE Docs MCP Server connects AI tools to ONLYOFFICE Docs. It lets AI
+agents, assistants, and chatbots create, open, edit, and save office documents
+through natural language interactions.
 
-- `stdio`, for clients that start the server process themselves.
-- Streamable HTTP, exposed at `/mcp`.
+### Use Cases
 
-## Required Configuration
+- Document Editing: Open and modify text documents, spreadsheets, and
+  presentations directly in the ONLYOFFICE editor.
+- File Creation: Create new DOCX, XLSX, and PPTX files from blank templates.
+- Editor Automation: Discover document-specific editor tools and execute actions
+  such as inserting content, changing formatting, or running macros.
+- Local and Remote File Workflows: Open files from allowed URLs, uploaded files,
+  or local `file://` paths when using stdio transport.
+- Embedded App Integrations: Use app tools to coordinate editor sessions,
+  command execution, and file streaming.
 
-### Shared
+---
+
+## Quick Start
+
+The server can run over `stdio` or Streamable HTTP. Use `stdio` when an MCP
+client starts the server process for each session. Use Streamable HTTP when you
+want a long-running server exposed at `/mcp`.
+
+At minimum, both transports need access to your ONLYOFFICE Document Server:
 
 ```sh
 DOCUMENT_SERVER_BASE_URL=https://your-onlyoffice-instance.example.com
 DOCUMENT_SERVER_JWT_SECRET=your-secret
-FILE_URL_ALLOWED_ORIGINS=https://files.example.com
 ```
 
-These variables are used by both transports.
+Set `FILE_URL_ALLOWED_ORIGINS` when opening remote document URLs. Set
+`STDIO_LOCAL_FILE_ALLOWED_ROOTS` only when opening local `file://` URLs over
+stdio.
 
-### stdio Transport
-
-```sh
-STDIO_LOCAL_FILE_ALLOWED_ROOTS=/projects
-```
-
-Set `STDIO_LOCAL_FILE_ALLOWED_ROOTS` only when local `file://` access is needed
-with stdio. The value must point to paths inside the container, not host paths.
-
-### HTTP Transport
-
-HTTP-only variables use the `HTTP_` prefix:
-
-```sh
-HTTP_ALLOWED_HOSTS=localhost,127.0.0.1
-HTTP_TRUST_PROXY=1
-HTTP_CORS_ALLOWED_ORIGINS=http://localhost:3001
-HTTP_RATE_LIMIT_WINDOW_MS=60000
-HTTP_RATE_LIMIT_MAX_REQUESTS=120
-HTTP_RATE_LIMIT_MAX_IN_FLIGHT=20
-```
-
-## Build the Docker Image
-
-```sh
-docker build -t onlyoffice/docs-mcp .
-```
-
-## stdio Transport
+### stdio with Docker
 
 Example MCP client configuration:
 
@@ -62,8 +52,6 @@ Example MCP client configuration:
         "-e", "DOCUMENT_SERVER_JWT_SECRET=your-secret",
         "-e", "STDIO_LOCAL_FILE_ALLOWED_ROOTS=/projects",
         "--mount", "type=bind,src=/Users/username/Desktop,dst=/projects/Desktop",
-        "--mount", "type=bind,src=/path/to/other/allowed/dir,dst=/projects/other/allowed/dir,ro",
-        "--mount", "type=bind,src=/path/to/file.txt,dst=/projects/path/to/file.txt,ro",
         "onlyoffice/docs-mcp",
         "--stdio"
       ]
@@ -72,13 +60,39 @@ Example MCP client configuration:
 }
 ```
 
-In this mode, users can pass local files as container paths, for example:
+With this configuration, local files are passed as container paths:
 
 ```text
 file:///projects/Desktop/example.docx
 ```
 
-## Streamable HTTP Transport
+### stdio with npm
+
+Example MCP client configuration:
+
+```json
+{
+  "mcpServers": {
+    "onlyoffice-docs": {
+      "command": "npx",
+      "args": ["-y", "@onlyoffice/docs-mcp", "--stdio"],
+      "env": {
+        "DOCUMENT_SERVER_BASE_URL": "https://your-onlyoffice-instance.example.com",
+        "DOCUMENT_SERVER_JWT_SECRET": "your-secret",
+        "STDIO_LOCAL_FILE_ALLOWED_ROOTS": "/Users/username/Desktop"
+      }
+    }
+  }
+}
+```
+
+With npm, local `file://` URLs use host paths:
+
+```text
+file:///Users/username/Desktop/example.docx
+```
+
+### Streamable HTTP with Docker
 
 Run the HTTP server:
 
@@ -98,18 +112,34 @@ The MCP endpoint is:
 http://localhost:3001/mcp
 ```
 
+Configure an MCP client that supports Streamable HTTP to use this endpoint.
+
+### Streamable HTTP with npm
+
+Run the HTTP server:
+
+```sh
+DOCUMENT_SERVER_BASE_URL=https://your-onlyoffice-instance.example.com \
+DOCUMENT_SERVER_JWT_SECRET=your-secret \
+HTTP_ALLOWED_HOSTS=localhost,127.0.0.1 \
+HTTP_CORS_ALLOWED_ORIGINS=http://localhost:3001 \
+npx -y @onlyoffice/docs-mcp --http --host 127.0.0.1 --port 3001
+```
+
+The MCP endpoint is:
+
+```text
+http://localhost:3001/mcp
+```
+
+Configure an MCP client that supports Streamable HTTP to use this endpoint.
+
 If the HTTP server is behind a reverse proxy that sends `X-Forwarded-For`
-(for example nginx, Traefik, or ngrok), configure Express to trust the proxy
-hop used by your deployment:
+(for example nginx, Traefik, or ngrok), configure Express to trust the proxy hop
+used by your deployment:
 
 ```sh
 HTTP_TRUST_PROXY=1
-```
-
-You can override the default port with command-line arguments:
-
-```sh
-docker run --rm -p 8080:8080 onlyoffice/docs-mcp --http --host 0.0.0.0 --port 8080
 ```
 
 Local `file://` URLs are intentionally supported only over stdio transport.
