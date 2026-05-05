@@ -18,6 +18,12 @@ through natural language interactions.
 
 ---
 
+## Prerequisites
+
+- ONLYOFFICE Docs.
+- Docker or Node.js with npm, depending on how you want to run the server.
+- An MCP client that supports `stdio` or Streamable HTTP transport.
+
 ## Quick Start
 
 The server can run over `stdio` or Streamable HTTP. Use `stdio` when an MCP
@@ -245,3 +251,12 @@ These variables apply only when the server is started with `--http`.
 | `HTTP_RATE_LIMIT_WINDOW_MS` | No | `60000` | HTTP rate limit window in milliseconds. |
 | `HTTP_RATE_LIMIT_MAX_REQUESTS` | No | `120` | Maximum HTTP requests per client within the rate limit window. |
 | `HTTP_RATE_LIMIT_MAX_IN_FLIGHT` | No | `20` | Maximum concurrent HTTP requests per client. |
+
+## License
+
+The ONLYOFFICE Docs MCP server is distributed under the MIT license found in the
+[LICENSE] file.
+
+<!-- Footnotes -->
+
+[LICENSE]: https://github.com/ONLYOFFICE/docs-mcp/blob/master/LICENSE
