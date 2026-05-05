@@ -22,7 +22,7 @@ ENV NODE_ENV=production
 
 COPY --from=builder /app/dist ./dist
 
-EXPOSE 3000
+EXPOSE 3001
 
 ENTRYPOINT ["node", "/app/dist/index.js"]
-CMD ["--http", "--host", "0.0.0.0", "--port", "3000"]
+CMD ["--http", "--host", "0.0.0.0", "--port", "3001"]

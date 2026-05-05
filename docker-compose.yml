@@ -10,4 +10,4 @@ services:
             HTTP_ALLOWED_HOSTS: "localhost,127.0.0.1"
             HTTP_TRUST_PROXY: "1"
         ports:
-          - '3001:3000'
+          - '3001:3001'
