@@ -1,4 +1,20 @@
+import { basename } from "path";
+import { fileURLToPath } from "url";
 import { formatsProvider } from "./formats-provider.js";
+
+export function getFileNameFromUrl(fileUrl: string): string {
+  try {
+    if (fileUrl.startsWith("file://")) {
+      return basename(fileURLToPath(fileUrl));
+    }
+
+    const pathname = new URL(fileUrl).pathname;
+    const encodedFileName = basename(pathname);
+    if (encodedFileName) return decodeURIComponent(encodedFileName);
+  } catch {}
+
+  return basename(fileUrl);
+}
 
 export function getExtension(filename: string): string {
   const dotIndex = filename.lastIndexOf(".");

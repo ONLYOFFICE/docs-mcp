@@ -9,10 +9,9 @@ import { EDITOR_APP_RESOURCE_URI } from "../../resources/definitions/editor.js";
 import type { McpTool } from "../index.js";
 import { formatDocumentFileUrlAccessError, validateAllowedDocumentFileUrl } from "../../domain/document-file-url-access.js";
 import { createEditorConfig } from "../../domain/document-server/editor-config.js";
-import { getDocumentType, getExtension } from "../../domain/document-server/file-utils.js";
+import { getDocumentType, getExtension, getFileNameFromUrl } from "../../domain/document-server/file-utils.js";
 import { formatsProvider } from "../../domain/document-server/formats-provider.js";
 import { formatLocalFileAccessError, resolveAllowedLocalFile } from "../../domain/local-file-access.js";
-import { basename } from "path";
 
 const OpenAIFileSchema = z.object({
   download_url: z.url().describe("Direct download URL of the file to open."),
@@ -89,7 +88,7 @@ export const openFile: McpTool = {
             }
           }
 
-          fileName = basename(fileUrl);
+          fileName = getFileNameFromUrl(fileUrl);
           downloadUrl = fileUrl;
         } else if (openai_file) {
           const validated = validateAllowedDocumentFileUrl(openai_file.download_url);
