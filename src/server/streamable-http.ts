@@ -5,7 +5,7 @@ import cors from "cors";
 import type { CorsOptions } from "cors";
 import type { Request, Response } from "express";
 import { CONFIG } from "../config.js";
-import { createRateLimitMiddleware } from "./rate-limit.js";
+import { createHttpRateLimitMiddleware, createInFlightLimitMiddleware } from "./rate-limit.js";
 
 const LOCALHOST_ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]"];
 
@@ -45,10 +45,12 @@ export async function startStreamableHTTPServer(
   const allowedHosts = [...new Set([...LOCALHOST_ALLOWED_HOSTS, options.host, ...CONFIG.HTTP_ALLOWED_HOSTS])];
   const app = createMcpExpressApp({ host: options.host, allowedHosts });
   app.use(cors(createCorsOptions()));
-  app.use(createRateLimitMiddleware({
+  app.use(createHttpRateLimitMiddleware({
     windowMs: CONFIG.HTTP_RATE_LIMIT_WINDOW_MS,
     maxRequests: CONFIG.HTTP_RATE_LIMIT_MAX_REQUESTS,
-    maxInFlight: CONFIG.HTTP_RATE_LIMIT_MAX_IN_FLIGHT,
+  }));
+  app.use(createInFlightLimitMiddleware({
+    maxRequests: CONFIG.HTTP_RATE_LIMIT_MAX_IN_FLIGHT,
   }));
 
   app.all("/mcp", async (req: Request, res: Response) => {

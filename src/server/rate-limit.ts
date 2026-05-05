@@ -1,13 +1,16 @@
 import type { Request, RequestHandler, Response } from "express";
+import { rateLimit } from "express-rate-limit";
 
-type RateLimitOptions = {
+type HttpRateLimitOptions = {
   windowMs: number;
   maxRequests: number;
-  maxInFlight: number;
+};
+
+type InFlightLimitOptions = {
+  maxRequests: number;
 };
 
 type ClientState = {
-  timestamps: number[];
   inFlight: number;
 };
 
@@ -18,33 +21,41 @@ function getClientKey(req: Request): string {
 function sendRateLimitError(res: Response, message: string): void {
   res.status(429).json({
     jsonrpc: "2.0",
-    error: { code: -32000, message },
+    error: { code: -32001, message },
     id: null,
   });
 }
 
-export function createRateLimitMiddleware(options: RateLimitOptions): RequestHandler {
+export function createHttpRateLimitMiddleware(options: HttpRateLimitOptions): RequestHandler {
+  return rateLimit({
+    windowMs: options.windowMs,
+    limit: options.maxRequests,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      jsonrpc: "2.0",
+      error: {
+        code: -32001,
+        message: "Too many requests, please try again later.",
+      },
+      id: null,
+    },
+  });
+}
+
+export function createInFlightLimitMiddleware(options: InFlightLimitOptions): RequestHandler {
   const clients = new Map<string, ClientState>();
 
   return (req, res, next) => {
     const key = getClientKey(req);
-    const now = Date.now();
-    const state = clients.get(key) ?? { timestamps: [], inFlight: 0 };
-    state.timestamps = state.timestamps.filter((timestamp) => now - timestamp < options.windowMs);
+    const state = clients.get(key) ?? { inFlight: 0 };
 
-    if (state.inFlight >= options.maxInFlight) {
+    if (state.inFlight >= options.maxRequests) {
       clients.set(key, state);
       sendRateLimitError(res, "Too many in-flight requests");
       return;
     }
 
-    if (state.timestamps.length >= options.maxRequests) {
-      clients.set(key, state);
-      sendRateLimitError(res, "Rate limit exceeded");
-      return;
-    }
-
-    state.timestamps.push(now);
     state.inFlight += 1;
     clients.set(key, state);
 
@@ -53,7 +64,7 @@ export function createRateLimitMiddleware(options: RateLimitOptions): RequestHan
       if (released) return;
       released = true;
       state.inFlight = Math.max(0, state.inFlight - 1);
-      if (state.inFlight === 0 && state.timestamps.length === 0) {
+      if (state.inFlight === 0) {
         clients.delete(key);
       }
     };
