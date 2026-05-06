@@ -94,6 +94,7 @@ describe("list-editor-tools", () => {
 
     await expect(handler({ sessionId: "session-1" })).resolves.toEqual({
       content: [{ type: "text", text: "Timeout: no response from editor" }],
+      isError: true,
     });
   });
 

@@ -68,7 +68,7 @@ export function createListEditorToolsHandler(deps: ListEditorToolsDeps = {}) {
       };
     } catch (err) {
       if (err instanceof CommandTimeoutError) {
-        return { content: [{ type: "text" as const, text: "Timeout: no response from editor" }] };
+        return { content: [{ type: "text" as const, text: "Timeout: no response from editor" }], isError: true };
       }
       throw err;
     }
