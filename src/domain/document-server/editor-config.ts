@@ -9,12 +9,26 @@ type CreateEditorConfigParams = {
   mode: "edit" | "view";
 };
 
-export async function createEditorConfig({
-  sessionId,
-  fileName,
-  fileUrl,
-  mode,
-}: CreateEditorConfigParams) {
+type CreateEditorConfigDeps = {
+  getDocumentType?: typeof getDocumentType;
+  isEditable?: typeof isEditable;
+  jwtAlgorithm?: typeof CONFIG.DOCUMENT_SERVER_JWT_ALGORITHM;
+  jwtExpiresIn?: typeof CONFIG.DOCUMENT_SERVER_JWT_EXPIRES_IN;
+  jwtSecret?: typeof CONFIG.DOCUMENT_SERVER_JWT_SECRET;
+  signJwt?: typeof jwt.sign;
+};
+
+export async function createEditorConfig(
+  {
+    sessionId,
+    fileName,
+    fileUrl,
+    mode,
+  }: CreateEditorConfigParams,
+  deps: CreateEditorConfigDeps = {},
+) {
+  const getType = deps.getDocumentType ?? getDocumentType;
+  const getIsEditable = deps.isEditable ?? isEditable;
   const extension = getExtension(fileName);
 
   const config = {
@@ -24,10 +38,10 @@ export async function createEditorConfig({
       title: fileName,
       url: fileUrl,
       permissions: {
-        edit: await isEditable(extension),
+        edit: await getIsEditable(extension),
       }
     },
-    documentType: await getDocumentType(extension),
+    documentType: await getType(extension),
     editorConfig: {
       mode,
       customization: {
@@ -43,9 +57,9 @@ export async function createEditorConfig({
 
   return {
     ...config,
-    token: jwt.sign(config, CONFIG.DOCUMENT_SERVER_JWT_SECRET, {
-      algorithm: CONFIG.DOCUMENT_SERVER_JWT_ALGORITHM,
-      expiresIn: CONFIG.DOCUMENT_SERVER_JWT_EXPIRES_IN,
+    token: (deps.signJwt ?? jwt.sign)(config, deps.jwtSecret ?? CONFIG.DOCUMENT_SERVER_JWT_SECRET, {
+      algorithm: deps.jwtAlgorithm ?? CONFIG.DOCUMENT_SERVER_JWT_ALGORITHM,
+      expiresIn: deps.jwtExpiresIn ?? CONFIG.DOCUMENT_SERVER_JWT_EXPIRES_IN,
     }),
   };
 }

@@ -3,6 +3,28 @@ import { z } from "zod";
 import { commandQueue } from "../../domain/editor-session/command-queue.js";
 import type { McpTool } from "../index.js";
 
+type SetEditorCommandResultInput = {
+  sessionId: string;
+  commandId: string;
+  result: unknown;
+};
+
+type SetEditorCommandResultDeps = {
+  commandQueue?: {
+    resolve(sessionId: string, commandId: string, data: unknown): boolean;
+  };
+};
+
+export function createSetEditorCommandResultHandler(deps: SetEditorCommandResultDeps = {}) {
+  const queue = deps.commandQueue ?? commandQueue;
+
+  return async ({ sessionId, commandId, result }: SetEditorCommandResultInput) => {
+    const found = queue.resolve(sessionId, commandId, result);
+    const text = found ? "ok" : "unknown commandId";
+    return { content: [{ type: "text" as const, text }] };
+  };
+}
+
 export const setEditorCommandResult: McpTool = {
   register(server: McpServer): void {
     server.registerTool(
@@ -16,11 +38,7 @@ export const setEditorCommandResult: McpTool = {
         },
         _meta: { visibility: ["app"] },
       },
-      async ({ sessionId, commandId, result }) => {
-        const found = commandQueue.resolve(sessionId, commandId, result);
-        const text = found ? "ok" : "unknown commandId";
-        return { content: [{ type: "text" as const, text }] };
-      }
+      createSetEditorCommandResultHandler()
     );
   },
 };

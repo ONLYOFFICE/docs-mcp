@@ -34,25 +34,38 @@ function localFileUrlToPath(uri: string): string | null {
   }
 }
 
-async function getAllowedRoots(): Promise<string[]> {
-  allowedRootsCache ??= Promise.all(
-    CONFIG.STDIO_LOCAL_FILE_ALLOWED_ROOTS.map(async (root) => {
+async function resolveAllowedRoots(roots: string[]): Promise<string[]> {
+  const resolvedRoots = await Promise.all(
+    roots.map(async (root) => {
       try {
         return normalizeForCompare(await realpath(path.resolve(root)));
       } catch {
         return null;
       }
     }),
-  ).then((roots) => roots.filter((root): root is string => root !== null));
+  );
+
+  return resolvedRoots.filter((root): root is string => root !== null);
+}
+
+async function getAllowedRoots(roots = CONFIG.STDIO_LOCAL_FILE_ALLOWED_ROOTS): Promise<string[]> {
+  if (roots !== CONFIG.STDIO_LOCAL_FILE_ALLOWED_ROOTS) {
+    return resolveAllowedRoots(roots);
+  }
+
+  allowedRootsCache ??= resolveAllowedRoots(CONFIG.STDIO_LOCAL_FILE_ALLOWED_ROOTS);
 
   return allowedRootsCache;
 }
 
-export async function resolveAllowedLocalFile(uri: string): Promise<LocalFileAccessResult> {
+export async function resolveAllowedLocalFile(
+  uri: string,
+  allowedRootsConfig = CONFIG.STDIO_LOCAL_FILE_ALLOWED_ROOTS,
+): Promise<LocalFileAccessResult> {
   const localPath = localFileUrlToPath(uri);
   if (!localPath) return { ok: false, reason: "invalid_url" };
 
-  const allowedRoots = await getAllowedRoots();
+  const allowedRoots = await getAllowedRoots(allowedRootsConfig);
   if (allowedRoots.length === 0) return { ok: false, reason: "not_configured" };
 
   let filePath: string;

@@ -5,31 +5,74 @@ import { CONFIG } from "../../config.js";
 import type { McpTool } from "../index.js";
 
 type DocumentType = "word" | "cell" | "slide" | "pdf";
+type EditorTool = { name: string };
+type ToolsConfig = Record<DocumentType, string[] | "all">;
 
-const ENABLED_CONFIG: Record<DocumentType, string[] | "all"> = {
+const ENABLED_CONFIG: ToolsConfig = {
   word: CONFIG.DOCUMENT_SERVER_AI_WORD_TOOLS_ENABLED,
   cell: CONFIG.DOCUMENT_SERVER_AI_CELL_TOOLS_ENABLED,
   slide: CONFIG.DOCUMENT_SERVER_AI_SLIDE_TOOLS_ENABLED,
   pdf: CONFIG.DOCUMENT_SERVER_AI_PDF_TOOLS_ENABLED,
 };
 
-const DISABLED_CONFIG: Record<DocumentType, string[] | "all"> = {
+const DISABLED_CONFIG: ToolsConfig = {
   word: CONFIG.DOCUMENT_SERVER_AI_WORD_TOOLS_DISABLED,
   cell: CONFIG.DOCUMENT_SERVER_AI_CELL_TOOLS_DISABLED,
   slide: CONFIG.DOCUMENT_SERVER_AI_SLIDE_TOOLS_DISABLED,
   pdf: CONFIG.DOCUMENT_SERVER_AI_PDF_TOOLS_DISABLED,
 };
 
-function filterTools(tools: Array<{ name: string }>, documentType: string | null): Array<{ name: string }> {
+export function filterTools(
+  tools: EditorTool[],
+  documentType: string | null,
+  enabledConfig: ToolsConfig = ENABLED_CONFIG,
+  disabledConfig: ToolsConfig = DISABLED_CONFIG,
+): EditorTool[] {
   const type = documentType as DocumentType | null;
-  if (!type || !(type in ENABLED_CONFIG)) return [];
+  if (!type || !(type in enabledConfig)) return [];
 
-  const enabled = ENABLED_CONFIG[type];
-  const disabled = DISABLED_CONFIG[type];
+  const enabled = enabledConfig[type];
+  const disabled = disabledConfig[type];
 
   if (disabled === "all") return [];
   const result = enabled === "all" ? tools : tools.filter((t) => enabled.includes(t.name));
   return disabled.length > 0 ? result.filter((t) => !disabled.includes(t.name)) : result;
+}
+
+type ListEditorToolsInput = {
+  sessionId: string;
+};
+
+type ListEditorToolsDeps = {
+  commandQueue?: {
+    enqueue(sessionId: string, command: { id: string; type: "aiListTools" }, timeoutMs: number): Promise<unknown>;
+  };
+  randomUUID?: () => string;
+  enabledConfig?: ToolsConfig;
+  disabledConfig?: ToolsConfig;
+};
+
+export function createListEditorToolsHandler(deps: ListEditorToolsDeps = {}) {
+  const queue = deps.commandQueue ?? commandQueue;
+  const randomUUID = deps.randomUUID ?? crypto.randomUUID.bind(crypto);
+
+  return async ({ sessionId }: ListEditorToolsInput) => {
+    try {
+      const result = await queue.enqueue(sessionId, { id: randomUUID(), type: "aiListTools" }, 10000);
+      const { documentType, tools } = result as { documentType: string | null; tools: EditorTool[] };
+      return {
+        content: [],
+        structuredContent: {
+          tools: filterTools(tools, documentType, deps.enabledConfig, deps.disabledConfig),
+        },
+      };
+    } catch (err) {
+      if (err instanceof CommandTimeoutError) {
+        return { content: [{ type: "text" as const, text: "Timeout: no response from editor" }] };
+      }
+      throw err;
+    }
+  };
 }
 
 export const listEditorTools: McpTool = {
@@ -50,18 +93,7 @@ export const listEditorTools: McpTool = {
             .describe("Session ID returned by open_file or create_file."),
         },
       },
-      async ({ sessionId }) => {
-        try {
-          const result = await commandQueue.enqueue(sessionId, { id: crypto.randomUUID(), type: "aiListTools" }, 10000);
-          const { documentType, tools } = result as { documentType: string | null; tools: Array<{ name: string }> };
-          return { content: [], structuredContent: { tools: filterTools(tools, documentType) } };
-        } catch (err) {
-          if (err instanceof CommandTimeoutError) {
-            return { content: [{ type: "text" as const, text: "Timeout: no response from editor" }] };
-          }
-          throw err;
-        }
-      }
+      createListEditorToolsHandler()
     );
   },
 };
