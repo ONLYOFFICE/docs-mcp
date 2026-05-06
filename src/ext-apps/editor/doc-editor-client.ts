@@ -90,44 +90,62 @@ export class DocEditorClient {
     handlers[command.type]?.();
   }
 
+  private completeCommand(commandId: string, result: unknown): Promise<void> {
+    return this.app.callServerTool({
+      name: "set_editor_command_result",
+      arguments: { sessionId: this.sessionId, commandId, result },
+    }).then(
+      () => {},
+      (err) => log.error("set_editor_command_result failed:", err),
+    ).finally(() => this.processNext());
+  }
+
   private aiListTools(command: Command): void {
     if (!this.connector) {
-      this.processNext();
+      void this.completeCommand(command.id, { error: "Editor connector is not available." });
       return;
     }
 
     this.connector.executeMethod("AI", [{ type: "Tools" }], (data) => {
       let tools: { name: string; description: string }[] = Array.isArray(data) ? data : ((data as any)?.Tools ?? []);
 
-      this.app.callServerTool({
-        name: "set_editor_command_result",
-        arguments: { sessionId: this.sessionId!, commandId: command.id, result: {
-          documentType: this.documentType,
-          tools,
-        } },
-      }).catch((err) => log.error("set_editor_command_result failed:", err)).finally(() => this.processNext());
+      void this.completeCommand(command.id, {
+        documentType: this.documentType,
+        tools,
+      });
     });
   }
 
   private aiCallTool(command: Command): void {
     if (!this.connector) {
-      this.processNext();
+      void this.completeCommand(command.id, { error: "Editor connector is not available." });
       return;
     }
 
     const { name, args } = command.payload as { name: string; args: object };
-    this.connector.sendEvent("ai_onCallTool", { name, arguments: args });
+    try {
+      this.connector.sendEvent("ai_onCallTool", { name, arguments: args });
+    } catch (error) {
+      void this.completeCommand(command.id, {
+        error: error instanceof Error ? error.message : "Failed to call editor tool.",
+      });
+    }
   }
 
   private saveFile(command: Command): void {
-    if (!this.docEditor) return;
+    if (!this.docEditor) {
+      void this.completeCommand(command.id, { error: "Document editor is not available." });
+      return;
+    }
 
-    this.docEditor.downloadAs();
-
-    this.app.callServerTool({
-      name: "set_editor_command_result",
-      arguments: { sessionId: this.sessionId, commandId: command.id },
-    }).catch((err) => log.error("set_editor_command_result failed:", err)).finally(() => this.processNext());
+    try {
+      this.docEditor.downloadAs();
+      void this.completeCommand(command.id, { ok: true });
+    } catch (error) {
+      void this.completeCommand(command.id, {
+        error: error instanceof Error ? error.message : "Failed to save file.",
+      });
+    }
   }
 
   private async readFileContent(url: string): Promise<Uint8Array> {
@@ -185,10 +203,7 @@ export class DocEditorClient {
 
         if (!commandId) return;
 
-        this.app.callServerTool({
-          name: "set_editor_command_result",
-          arguments: { sessionId: this.sessionId!, commandId, result },
-        }).catch((err) => log.error("set_editor_command_result failed:", err)).finally(() => this.processNext());
+        void this.completeCommand(commandId, result);
       });
 
       this.poller = new Poller(this.app, {
