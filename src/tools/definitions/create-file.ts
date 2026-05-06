@@ -10,13 +10,52 @@ import { createEditorConfig } from "../../domain/document-server/editor-config.j
 
 const FILE_TYPES = ["docx", "xlsx", "pptx"] as const;
 const fileTypeSchema = z.enum(FILE_TYPES);
+type FileType = z.infer<typeof fileTypeSchema>;
 
-function getBlankFileUrl(locale: string, fileType: z.infer<typeof fileTypeSchema>): string {
+export function getBlankFileUrl(locale: string, fileType: FileType): string {
   return `blank://${locale}/${fileType}`;
 }
 
-function getFileName(fileName: string, fileType: z.infer<typeof fileTypeSchema>): string {
+export function getFileName(fileName: string, fileType: FileType): string {
   return fileName.endsWith(`.${fileType}`) ? fileName : `${fileName}.${fileType}`;
+}
+
+type CreateFileInput = {
+  fileName: string;
+  fileType: FileType;
+  locale?: string;
+};
+
+type CreateFileDeps = {
+  createEditorConfig?: typeof createEditorConfig;
+  documentServerBaseUrl?: string;
+  randomUUID?: () => string;
+};
+
+export function createCreateFileHandler(deps: CreateFileDeps = {}) {
+  const buildEditorConfig = deps.createEditorConfig ?? createEditorConfig;
+  const documentServerBaseUrl = deps.documentServerBaseUrl ?? CONFIG.DOCUMENT_SERVER_BASE_URL;
+  const randomUUID = deps.randomUUID ?? crypto.randomUUID.bind(crypto);
+
+  return async ({ fileName, fileType, locale }: CreateFileInput) => {
+    const sessionId = randomUUID();
+    const config = await buildEditorConfig({
+      sessionId,
+      fileName: getFileName(fileName, fileType),
+      fileUrl: `_data_`,
+      mode: "edit",
+    });
+
+    return {
+      content: [],
+      structuredContent: {
+        sessionId,
+        documentServerBaseUrl,
+        config,
+        fileUrl: getBlankFileUrl(locale || "default", fileType),
+      },
+    };
+  };
 }
 
 export const createFile: McpTool = {
@@ -36,25 +75,7 @@ export const createFile: McpTool = {
           ui: { resourceUri: EDITOR_APP_RESOURCE_URI },
         },
       },
-      async ({ fileName, fileType, locale }) => {
-        const sessionId = crypto.randomUUID();
-        const config = await createEditorConfig({
-          sessionId,
-          fileName: getFileName(fileName, fileType),
-          fileUrl: `_data_`,
-          mode: "edit",
-        });
-
-        return {
-          content: [],
-          structuredContent: {
-            sessionId,
-            documentServerBaseUrl: CONFIG.DOCUMENT_SERVER_BASE_URL,
-            config,
-            fileUrl: getBlankFileUrl(locale || "default", fileType),
-          },
-        };
-      }
+      createCreateFileHandler()
     );
   },
 };
