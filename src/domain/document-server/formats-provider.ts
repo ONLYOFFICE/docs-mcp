@@ -11,6 +11,7 @@ export interface DocFormat {
 }
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const FETCH_TIMEOUT_MS = 10_000;
 
 type FetchLike = typeof fetch;
 
@@ -21,6 +22,7 @@ export class FormatsProvider {
     private readonly documentServerBaseUrl = CONFIG.DOCUMENT_SERVER_BASE_URL,
     private readonly fetchImpl: FetchLike = fetch,
     private readonly now: () => number = Date.now,
+    private readonly fetchTimeoutMs: number = FETCH_TIMEOUT_MS,
   ) {}
 
   async getDocFormats(): Promise<DocFormat[]> {
@@ -30,7 +32,14 @@ export class FormatsProvider {
     }
 
     const url = new URL("/meta/formats", this.documentServerBaseUrl);
-    const response = await this.fetchImpl(url.toString());
+    const abort = new AbortController();
+    const timer = setTimeout(() => abort.abort(), this.fetchTimeoutMs);
+    let response: Response;
+    try {
+      response = await this.fetchImpl(url.toString(), { signal: abort.signal });
+    } finally {
+      clearTimeout(timer);
+    }
     if (!response.ok) {
       throw new Error(
         `Failed to fetch formats from Document Server: ${response.status} ${response.statusText}`

@@ -62,6 +62,17 @@ describe("FormatsProvider", () => {
     await expect(provider.getDocFormatByExtension("txt")).resolves.toBeUndefined();
   });
 
+  test("aborts the fetch when the timeout expires", async () => {
+    const { FormatsProvider } = await import("../../../src/domain/document-server/formats-provider.ts");
+    const fetchImpl = (_url: string, init?: RequestInit) =>
+      new Promise<Response>((_resolve, reject) => {
+        init?.signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
+      });
+    const provider = new FormatsProvider("https://document-server.example", fetchImpl, Date.now, 1);
+
+    await expect(provider.getDocFormats()).rejects.toMatchObject({ name: "AbortError" });
+  });
+
   test("lists only viewable extensions", async () => {
     const { FormatsProvider } = await import("../../../src/domain/document-server/formats-provider.ts");
     const provider = new FormatsProvider("https://document-server.example", async () =>
