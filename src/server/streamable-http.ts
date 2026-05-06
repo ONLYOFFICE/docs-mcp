@@ -60,6 +60,7 @@ export async function startStreamableHTTPServer(
   const app = createMcpExpressApp({ host: options.host, allowedHosts });
   app.set("trust proxy", CONFIG.HTTP_TRUST_PROXY);
   app.use(cors(createCorsOptions()));
+  app.get("/health", handleHealthCheck);
   app.use(createHttpRateLimitMiddleware({
     windowMs: CONFIG.HTTP_RATE_LIMIT_WINDOW_MS,
     maxRequests: CONFIG.HTTP_RATE_LIMIT_MAX_REQUESTS,
@@ -67,8 +68,6 @@ export async function startStreamableHTTPServer(
   app.use(createInFlightLimitMiddleware({
     maxRequests: CONFIG.HTTP_RATE_LIMIT_MAX_IN_FLIGHT,
   }));
-
-  app.get("/health", handleHealthCheck);
 
   app.all("/mcp", async (req: Request, res: Response) => {
     const server = createServer();
