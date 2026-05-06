@@ -124,7 +124,8 @@ export function createReadFileContentHandler(deps: ReadFileContentDeps = {}) {
       } finally {
         await fh.close();
       }
-    } catch {
+    } catch (err) {
+      console.error("[read-file-content] Failed to read file:", err);
       return {
         content: [],
         structuredContent: { error: `Failed to read file.` },
