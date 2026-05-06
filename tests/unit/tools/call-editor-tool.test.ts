@@ -91,6 +91,7 @@ describe("call-editor-tool", () => {
       handler({ sessionId: "session-1", tool: "insertText", input: { text: "Hello" } }),
     ).resolves.toEqual({
       content: [{ type: "text", text: "Timeout: no response from editor" }],
+      isError: true,
     });
   });
 

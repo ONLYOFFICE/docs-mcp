@@ -34,7 +34,7 @@ export function createCallEditorToolHandler(deps: CallEditorToolDeps = {}) {
       return { content: [], structuredContent: { result } };
     } catch (err) {
       if (err instanceof CommandTimeoutError) {
-        return { content: [{ type: "text" as const, text: "Timeout: no response from editor" }] };
+        return { content: [{ type: "text" as const, text: "Timeout: no response from editor" }], isError: true };
       }
       throw err;
     }
