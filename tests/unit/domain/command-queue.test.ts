@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, jest, test } from "bun:test";
 import { CommandQueue, CommandTimeoutError } from "../../../src/domain/editor-session/command-queue.ts";
 
 describe("CommandQueue", () => {
@@ -45,5 +45,57 @@ describe("CommandQueue", () => {
 
     await expect(result).rejects.toBeInstanceOf(CommandTimeoutError);
     expect(queue.resolve("session-1", "command-1", null)).toBe(false);
+  });
+
+  test("longPoll returns commands already in the queue", async () => {
+    const queue = new CommandQueue();
+    const enqueuePromise = queue.enqueue("session-1", { id: "command-1", type: "saveFile" }, 5_000);
+
+    const commands = await queue.longPoll("session-1");
+
+    expect(commands).toEqual([{ id: "command-1", type: "saveFile" }]);
+    queue.resolve("session-1", "command-1", null);
+    await enqueuePromise;
+  });
+
+  test("longPoll resolves with commands that arrive after it starts waiting", async () => {
+    const queue = new CommandQueue();
+    const pollPromise = queue.longPoll("session-1");
+
+    const enqueuePromise = queue.enqueue("session-1", { id: "command-1", type: "aiListTools" }, 5_000);
+
+    const commands = await pollPromise;
+    expect(commands).toEqual([{ id: "command-1", type: "aiListTools" }]);
+
+    queue.resolve("session-1", "command-1", { tools: [] });
+    await enqueuePromise;
+  });
+
+  test("a new longPoll call evicts the previous waiter, which resolves with empty", async () => {
+    const queue = new CommandQueue();
+
+    const poll1 = queue.longPoll("session-1");
+    const poll2 = queue.longPoll("session-1");
+
+    await expect(poll1).resolves.toEqual([]);
+
+    const enqueuePromise = queue.enqueue("session-1", { id: "command-1", type: "saveFile" }, 5_000);
+    const commands = await poll2;
+    expect(commands).toEqual([{ id: "command-1", type: "saveFile" }]);
+
+    queue.resolve("session-1", "command-1", null);
+    await enqueuePromise;
+  });
+
+  test("longPoll returns empty after the 30-second timeout", async () => {
+    jest.useFakeTimers();
+    try {
+      const queue = new CommandQueue();
+      const pollPromise = queue.longPoll("session-1");
+      jest.advanceTimersByTime(30_000);
+      await expect(pollPromise).resolves.toEqual([]);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });
