@@ -52,6 +52,7 @@ export function createCreateFileHandler(deps: CreateFileDeps = {}) {
       structuredContent: {
         sessionId,
         documentServerBaseUrl,
+        shardkey: config.document.key,
         config,
         fileUrl: getBlankFileUrl(locale || "default", fileType),
       },

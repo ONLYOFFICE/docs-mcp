@@ -27,6 +27,7 @@ let toolResultTimer: ReturnType<typeof setTimeout> | null = null;
 type ToolResultContent = {
   sessionId: string;
   documentServerBaseUrl: string;
+  shardkey: string;
   config: EditorConfig;
   fileUrl: string | undefined;
 };
@@ -58,7 +59,7 @@ app.ontoolresult = async (result) => {
   log.info("Initializing DocEditorClient, sessionId:", content.sessionId);
 
   docEditorClient
-    .init()
+    .init(content.shardkey)
     .then(() => {
       docEditorClient.open(content.config, content.fileUrl);
 

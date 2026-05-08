@@ -182,6 +182,7 @@ export function createOpenFileHandler(deps: OpenFileDeps = {}) {
       structuredContent: {
         sessionId,
         documentServerBaseUrl,
+        shardkey: config.document.key,
         config,
         ...(isLocalFile ? { fileUrl: downloadUrl } : {}),
       },

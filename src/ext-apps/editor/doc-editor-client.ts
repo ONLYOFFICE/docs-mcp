@@ -65,9 +65,9 @@ export class DocEditorClient {
     private readonly sessionId: string,
   ) {}
 
-  async init(): Promise<void> {
+  async init(shardkey: string): Promise<void> {
     await this.loadScript(
-      `${this.documentServerBaseUrl}/web-apps/apps/api/documents/api.js`,
+      `${this.documentServerBaseUrl}/web-apps/apps/api/documents/api.js?shardkey=${shardkey}`,
     );
   }
 
