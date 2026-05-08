@@ -2,10 +2,16 @@ import { App } from "@modelcontextprotocol/ext-apps";
 import { DocEditorClient, type EditorConfig } from "./doc-editor-client.js";
 import packageJson from "../../../package.json" with { type: "json" };
 
-const app = new App({
-  name: "ONLYOFFICE Editor",
-  version: packageJson.version,
-});
+const app = new App(
+  {
+    name: "ONLYOFFICE Editor",
+    version: packageJson.version,
+  },
+  {},
+  {
+    autoResize: false,
+  },
+);
 
 const log = {
   info: console.log.bind(console, "[ONLYOFFICE-EDITOR]"),
@@ -55,6 +61,10 @@ app.ontoolresult = async (result) => {
     .init()
     .then(() => {
       docEditorClient.open(content.config, content.fileUrl);
+
+      app.sendSizeChanged({
+        height: INLINE_EDITOR_HEIGHT,
+      });
 
       hideLoading();
       initDisplayModeButton();
