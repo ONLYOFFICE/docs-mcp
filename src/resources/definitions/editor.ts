@@ -1,4 +1,7 @@
-import { registerAppResource, RESOURCE_MIME_TYPE } from "@modelcontextprotocol/ext-apps/server";
+import {
+  registerAppResource,
+  RESOURCE_MIME_TYPE,
+} from "@modelcontextprotocol/ext-apps/server";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -17,7 +20,10 @@ export const editorResource: McpResource = {
       EDITOR_APP_RESOURCE_URI,
       { mimeType: RESOURCE_MIME_TYPE },
       async () => {
-        const html = await fs.readFile(path.join(distDir, EDITOR_APP_PATH), "utf-8");
+        const html = await fs.readFile(
+          path.join(distDir, EDITOR_APP_PATH),
+          "utf-8",
+        );
 
         return {
           contents: [
@@ -37,7 +43,7 @@ export const editorResource: McpResource = {
             },
           ],
         };
-      }
+      },
     );
   },
 };

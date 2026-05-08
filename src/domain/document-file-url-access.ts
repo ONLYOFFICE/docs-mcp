@@ -37,15 +37,24 @@ export function validateAllowedDocumentFileUrl(
     return { ok: true };
   }
 
-  const allowedOrigins = new Set(allowedOriginsConfig.map((origin) => normalizeOrigin(origin)));
+  const allowedOrigins = new Set(
+    allowedOriginsConfig.map((origin) => normalizeOrigin(origin)),
+  );
   if (!allowedOrigins.has(parsed.origin)) {
-    return { ok: false, reason: "outside_allowed_origins", origin: parsed.origin };
+    return {
+      ok: false,
+      reason: "outside_allowed_origins",
+      origin: parsed.origin,
+    };
   }
 
   return { ok: true };
 }
 
-export function formatDocumentFileUrlAccessError(url: string, error: DocumentFileUrlAccessResult): string {
+export function formatDocumentFileUrlAccessError(
+  url: string,
+  error: DocumentFileUrlAccessResult,
+): string {
   if (error.ok) return "";
 
   switch (error.reason) {

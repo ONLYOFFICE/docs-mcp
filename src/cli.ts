@@ -22,7 +22,9 @@ function parsePort(value: string | undefined): number {
 
   const port = Number(value);
   if (!Number.isInteger(port) || port <= 0 || port > 65535) {
-    throw new Error(`--port must be an integer between 1 and 65535, got: ${value}`);
+    throw new Error(
+      `--port must be an integer between 1 and 65535, got: ${value}`,
+    );
   }
 
   return port;

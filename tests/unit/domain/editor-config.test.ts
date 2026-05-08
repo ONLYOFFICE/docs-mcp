@@ -6,9 +6,8 @@ process.env.DOCUMENT_SERVER_JWT_SECRET = "test-secret";
 
 describe("createEditorConfig", () => {
   test("builds editor config from document metadata", async () => {
-    const { createEditorConfig } = await import(
-      "../../../src/domain/document-server/editor-config.ts"
-    );
+    const { createEditorConfig } =
+      await import("../../../src/domain/document-server/editor-config.ts");
     const calls: unknown[] = [];
 
     const config = await createEditorConfig(
@@ -78,9 +77,8 @@ describe("createEditorConfig", () => {
   });
 
   test("creates a verifiable JWT token", async () => {
-    const { createEditorConfig } = await import(
-      "../../../src/domain/document-server/editor-config.ts"
-    );
+    const { createEditorConfig } =
+      await import("../../../src/domain/document-server/editor-config.ts");
     const config = await createEditorConfig(
       {
         sessionId: "session-1",

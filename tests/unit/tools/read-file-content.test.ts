@@ -19,9 +19,8 @@ describe("read-file-content", () => {
   });
 
   test("reads a base64-encoded local file chunk", async () => {
-    const { createReadFileContentHandler } = await import(
-      "../../../src/tools/definitions/read-file-content.ts"
-    );
+    const { createReadFileContentHandler } =
+      await import("../../../src/tools/definitions/read-file-content.ts");
     const filePath = path.join(tempRoot, "document.txt");
     await writeFile(filePath, "hello world");
     const fileUrl = pathToFileURL(filePath).toString();
@@ -45,9 +44,8 @@ describe("read-file-content", () => {
   });
 
   test("reads from the requested byte offset", async () => {
-    const { createReadFileContentHandler } = await import(
-      "../../../src/tools/definitions/read-file-content.ts"
-    );
+    const { createReadFileContentHandler } =
+      await import("../../../src/tools/definitions/read-file-content.ts");
     const filePath = path.join(tempRoot, "document.txt");
     await writeFile(filePath, "hello world");
     const handler = createReadFileContentHandler({
@@ -74,12 +72,17 @@ describe("read-file-content", () => {
   });
 
   test("rejects unsupported URL formats", async () => {
-    const { createReadFileContentHandler } = await import(
-      "../../../src/tools/definitions/read-file-content.ts"
-    );
+    const { createReadFileContentHandler } =
+      await import("../../../src/tools/definitions/read-file-content.ts");
     const handler = createReadFileContentHandler();
 
-    await expect(handler({ url: "https://example.com/document.docx", offset: 0, byteCount: 10 })).resolves.toEqual({
+    await expect(
+      handler({
+        url: "https://example.com/document.docx",
+        offset: 0,
+        byteCount: 10,
+      }),
+    ).resolves.toEqual({
       content: [],
       structuredContent: {
         error:
@@ -89,21 +92,21 @@ describe("read-file-content", () => {
   });
 
   test("rejects malformed blank URLs", async () => {
-    const { createReadFileContentHandler } = await import(
-      "../../../src/tools/definitions/read-file-content.ts"
-    );
+    const { createReadFileContentHandler } =
+      await import("../../../src/tools/definitions/read-file-content.ts");
     const handler = createReadFileContentHandler();
 
-    await expect(handler({ url: "blank://en", offset: 0, byteCount: 10 })).resolves.toEqual({
+    await expect(
+      handler({ url: "blank://en", offset: 0, byteCount: 10 }),
+    ).resolves.toEqual({
       content: [],
       structuredContent: { error: "Invalid blank URL: blank://en" },
     });
   });
 
   test("rejects local files outside stdio transport", async () => {
-    const { createReadFileContentHandler } = await import(
-      "../../../src/tools/definitions/read-file-content.ts"
-    );
+    const { createReadFileContentHandler } =
+      await import("../../../src/tools/definitions/read-file-content.ts");
     let resolverCalled = false;
     const handler = createReadFileContentHandler({
       getTransportMode: () => "http",
@@ -113,38 +116,50 @@ describe("read-file-content", () => {
       },
     });
 
-    const result = await handler({ url: "file:///tmp/document.docx", offset: 0, byteCount: 10 });
+    const result = await handler({
+      url: "file:///tmp/document.docx",
+      offset: 0,
+      byteCount: 10,
+    });
 
     expect(result).toEqual({
       content: [],
-      structuredContent: { error: "Local file access is only supported with stdio transport." },
+      structuredContent: {
+        error: "Local file access is only supported with stdio transport.",
+      },
     });
     expect(resolverCalled).toBe(false);
   });
 
   test("returns formatted local file access errors", async () => {
-    const { createReadFileContentHandler } = await import(
-      "../../../src/tools/definitions/read-file-content.ts"
-    );
+    const { createReadFileContentHandler } =
+      await import("../../../src/tools/definitions/read-file-content.ts");
     const handler = createReadFileContentHandler({
       getTransportMode: () => "stdio",
-      resolveAllowedLocalFile: async () => ({ ok: false, reason: "outside_allowed_roots" }),
+      resolveAllowedLocalFile: async () => ({
+        ok: false,
+        reason: "outside_allowed_roots",
+      }),
     });
 
-    const result = await handler({ url: "file:///tmp/document.docx", offset: 0, byteCount: 10 });
+    const result = await handler({
+      url: "file:///tmp/document.docx",
+      offset: 0,
+      byteCount: 10,
+    });
 
     expect(result).toEqual({
       content: [],
       structuredContent: {
-        error: "Local file is outside the allowed directories: file:///tmp/document.docx",
+        error:
+          "Local file is outside the allowed directories: file:///tmp/document.docx",
       },
     });
   });
 
   test("registers the MCP tool definition", async () => {
-    const { MAX_CHUNK_BYTES, readFileContent } = await import(
-      "../../../src/tools/definitions/read-file-content.ts"
-    );
+    const { MAX_CHUNK_BYTES, readFileContent } =
+      await import("../../../src/tools/definitions/read-file-content.ts");
     const registrations: unknown[] = [];
     const server = {
       registerTool: (...args: unknown[]) => {

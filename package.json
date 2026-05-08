@@ -35,6 +35,8 @@
   "scripts": {
     "test": "bun test",
     "test:unit": "bun test tests/unit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "build": "node scripts/build.mjs",
     "watch": "cross-env INPUT=src/ext-apps/editor/index.html vite build --watch",
     "serve": "bun --watch src/index.ts",
@@ -53,6 +55,7 @@
     "zod": "^4.4.1"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
@@ -60,11 +63,17 @@
     "bun": "^1.2.21",
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
+    "eslint": "^10.3.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "globals": "^17.6.0",
+    "prettier": "3.8.3",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.59.2",
     "vite": "^8.0.1",
     "vite-plugin-singlefile": "^2.3.2"
   },
-    "pnpm": {
+  "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild",
       "bun"

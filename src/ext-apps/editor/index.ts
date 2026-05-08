@@ -1,8 +1,11 @@
 import { App } from "@modelcontextprotocol/ext-apps";
-import { DocEditorClient } from "./doc-editor-client.js";
+import { DocEditorClient, type EditorConfig } from "./doc-editor-client.js";
 import packageJson from "../../../package.json" with { type: "json" };
 
-const app = new App({ name: "ONLYOFFICE Editor", version: packageJson.version });
+const app = new App({
+  name: "ONLYOFFICE Editor",
+  version: packageJson.version,
+});
 
 const log = {
   info: console.log.bind(console, "[ONLYOFFICE-EDITOR]"),
@@ -15,6 +18,13 @@ const EDITOR_CONTAINER_ID = "editor";
 
 let toolResultTimer: ReturnType<typeof setTimeout> | null = null;
 
+type ToolResultContent = {
+  sessionId: string;
+  documentServerBaseUrl: string;
+  config: EditorConfig;
+  fileUrl: string | undefined;
+};
+
 app.ontoolresult = async (result) => {
   log.info("Tool result received (ontoolresult)");
 
@@ -25,12 +35,7 @@ app.ontoolresult = async (result) => {
 
   showLoading("Waiting loading ONLYOFFICE Editor...");
 
-  const content = result.structuredContent as {
-    sessionId: string;
-    documentServerBaseUrl: string;
-    config: any;
-    fileUrl: string | undefined;
-  };
+  const content = result.structuredContent as ToolResultContent;
 
   const hostContext = app.getHostContext();
   const locale = hostContext?.locale || "en";
@@ -41,25 +46,28 @@ app.ontoolresult = async (result) => {
     app,
     EDITOR_CONTAINER_ID,
     content.documentServerBaseUrl,
-    content.sessionId
+    content.sessionId,
   );
-  
+
   log.info("Initializing DocEditorClient, sessionId:", content.sessionId);
 
-  docEditorClient.init().then(() => {
-    docEditorClient.open(content.config, content.fileUrl);
+  docEditorClient
+    .init()
+    .then(() => {
+      docEditorClient.open(content.config, content.fileUrl);
 
-    hideLoading();
-    initDisplayModeButton();
-  }).catch((error) => {
-    log.error("Failed to initialize DocEditorClient:", error);
+      hideLoading();
+      initDisplayModeButton();
+    })
+    .catch((error) => {
+      log.error("Failed to initialize DocEditorClient:", error);
 
-    showMessageScreen(
-      "ONLYOFFICE Document Server unavailable",
-      "The ONLYOFFICE Document Server could not be loaded. Please check the server URL and try again.",
-      "error"
-    );
-  });
+      showMessageScreen(
+        "ONLYOFFICE Document Server unavailable",
+        "The ONLYOFFICE Document Server could not be loaded. Please check the server URL and try again.",
+        "error",
+      );
+    });
 };
 
 app.onhostcontextchanged = (context) => {
@@ -73,7 +81,7 @@ app.onhostcontextchanged = (context) => {
       });
     }
   }
-}
+};
 
 app.connect().then(() => {
   log.info("Connected to host");
@@ -82,10 +90,12 @@ app.connect().then(() => {
 
   toolResultTimer = setTimeout(() => {
     toolResultTimer = null;
-    log.info(`Tool result timeout (ontoolresult) — no result received within ${TOOL_RESULT_TIMEOUT_MS / 1000} s`);
+    log.info(
+      `Tool result timeout (ontoolresult) — no result received within ${TOOL_RESULT_TIMEOUT_MS / 1000} s`,
+    );
     showMessageScreen(
       "No response received",
-      "Ask the AI assistant to open a file in ONLYOFFICE to get started."
+      "Ask the AI assistant to open a file in ONLYOFFICE to get started.",
     );
   }, TOOL_RESULT_TIMEOUT_MS);
 });
@@ -95,14 +105,18 @@ const showLoading = (message: string): void => {
   const text = document.getElementById("loading-text");
   if (loading) loading.style.display = "";
   if (text) text.textContent = message;
-}
+};
 
 const hideLoading = (): void => {
   const loading = document.getElementById("loading");
   if (loading) loading.style.display = "none";
-}
+};
 
-const showMessageScreen = (title: string, description: string, variant: "idle" | "error" = "idle"): void => {
+const showMessageScreen = (
+  title: string,
+  description: string,
+  variant: "idle" | "error" = "idle",
+): void => {
   const loading = document.getElementById("loading");
   const messageScreen = document.getElementById("message-screen");
   const iconIdle = document.getElementById("message-screen-icon-idle");
@@ -116,7 +130,7 @@ const showMessageScreen = (title: string, description: string, variant: "idle" |
   if (titleEl) titleEl.textContent = title;
   if (textEl) textEl.textContent = description;
   if (messageScreen) messageScreen.style.display = "flex";
-}
+};
 
 const initDisplayModeButton = () => {
   const hostContext = app.getHostContext();
@@ -129,19 +143,21 @@ const initDisplayModeButton = () => {
   displayModeButton?.setAttribute("data-mode", hostContext.displayMode);
 
   displayModeButton?.addEventListener("click", (event: Event) => {
-    const target = event.currentTarget as HTMLElement; 
+    const target = event.currentTarget as HTMLElement;
     const currentMode = target.getAttribute("data-mode");
-    
-    app.requestDisplayMode({ mode: currentMode === "fullscreen" ? "inline" : "fullscreen" });
+
+    app.requestDisplayMode({
+      mode: currentMode === "fullscreen" ? "inline" : "fullscreen",
+    });
   });
-}
+};
 
 const changeDisplayMode = (displayMode: string) => {
   const displayModeButton = getDisplayModeButton();
 
   displayModeButton?.setAttribute("data-mode", displayMode);
-}
+};
 
 const getDisplayModeButton = (): HTMLElement | null => {
   return document.getElementById("display-mode-button");
-}
+};

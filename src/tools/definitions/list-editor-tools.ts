@@ -1,6 +1,9 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { commandQueue, CommandTimeoutError } from "../../domain/editor-session/command-queue.js";
+import {
+  commandQueue,
+  CommandTimeoutError,
+} from "../../domain/editor-session/command-queue.js";
 import { CONFIG } from "../../config.js";
 import type { McpTool } from "../index.js";
 
@@ -35,8 +38,11 @@ export function filterTools(
   const disabled = disabledConfig[type];
 
   if (disabled === "all") return [];
-  const result = enabled === "all" ? tools : tools.filter((t) => enabled.includes(t.name));
-  return disabled.length > 0 ? result.filter((t) => !disabled.includes(t.name)) : result;
+  const result =
+    enabled === "all" ? tools : tools.filter((t) => enabled.includes(t.name));
+  return disabled.length > 0
+    ? result.filter((t) => !disabled.includes(t.name))
+    : result;
 }
 
 type ListEditorToolsInput = {
@@ -45,7 +51,11 @@ type ListEditorToolsInput = {
 
 type ListEditorToolsDeps = {
   commandQueue?: {
-    enqueue(sessionId: string, command: { id: string; type: "aiListTools" }, timeoutMs: number): Promise<unknown>;
+    enqueue(
+      sessionId: string,
+      command: { id: string; type: "aiListTools" },
+      timeoutMs: number,
+    ): Promise<unknown>;
   };
   randomUUID?: () => string;
   enabledConfig?: ToolsConfig;
@@ -58,17 +68,34 @@ export function createListEditorToolsHandler(deps: ListEditorToolsDeps = {}) {
 
   return async ({ sessionId }: ListEditorToolsInput) => {
     try {
-      const result = await queue.enqueue(sessionId, { id: randomUUID(), type: "aiListTools" }, 10000);
-      const { documentType, tools } = result as { documentType: string | null; tools: EditorTool[] };
+      const result = await queue.enqueue(
+        sessionId,
+        { id: randomUUID(), type: "aiListTools" },
+        10000,
+      );
+      const { documentType, tools } = result as {
+        documentType: string | null;
+        tools: EditorTool[];
+      };
       return {
         content: [],
         structuredContent: {
-          tools: filterTools(tools, documentType, deps.enabledConfig, deps.disabledConfig),
+          tools: filterTools(
+            tools,
+            documentType,
+            deps.enabledConfig,
+            deps.disabledConfig,
+          ),
         },
       };
     } catch (err) {
       if (err instanceof CommandTimeoutError) {
-        return { content: [{ type: "text" as const, text: "Timeout: no response from editor" }], isError: true };
+        return {
+          content: [
+            { type: "text" as const, text: "Timeout: no response from editor" },
+          ],
+          isError: true,
+        };
       }
       throw err;
     }
@@ -80,7 +107,8 @@ export const listEditorTools: McpTool = {
     server.registerTool(
       "list_editor_tools",
       {
-        description: "List all plugin tools available in the current ONLYOFFICE editing session, with their names and input schemas. Always call this before call_editor_tool to discover valid tool names.",
+        description:
+          "List all plugin tools available in the current ONLYOFFICE editing session, with their names and input schemas. Always call this before call_editor_tool to discover valid tool names.",
         annotations: {
           readOnlyHint: true,
           destructiveHint: false,
@@ -93,7 +121,7 @@ export const listEditorTools: McpTool = {
             .describe("Session ID returned by open_file or create_file."),
         },
       },
-      createListEditorToolsHandler()
+      createListEditorToolsHandler(),
     );
   },
 };

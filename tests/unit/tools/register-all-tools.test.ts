@@ -26,7 +26,11 @@ describe("registerAllTools", () => {
       "read_file_content",
     ]);
     for (const registration of registrations) {
-      expect(registration).toEqual([expect.any(String), expect.any(Object), expect.any(Function)]);
+      expect(registration).toEqual([
+        expect.any(String),
+        expect.any(Object),
+        expect.any(Function),
+      ]);
     }
   });
 });

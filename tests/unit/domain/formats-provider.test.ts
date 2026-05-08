@@ -5,13 +5,25 @@ process.env.DOCUMENT_SERVER_JWT_SECRET = "test-secret";
 
 describe("FormatsProvider", () => {
   test("fetches document formats from the Document Server metadata endpoint", async () => {
-    const { FormatsProvider } = await import("../../../src/domain/document-server/formats-provider.ts");
+    const { FormatsProvider } =
+      await import("../../../src/domain/document-server/formats-provider.ts");
     const calls: string[] = [];
     const fetchImpl = async (url: string) => {
       calls.push(url);
-      return jsonResponse([{ name: "docx", type: "word", actions: ["edit"], convert: [], mime: [] }]);
+      return jsonResponse([
+        {
+          name: "docx",
+          type: "word",
+          actions: ["edit"],
+          convert: [],
+          mime: [],
+        },
+      ]);
     };
-    const provider = new FormatsProvider("https://document-server.example/base", fetchImpl);
+    const provider = new FormatsProvider(
+      "https://document-server.example/base",
+      fetchImpl,
+    );
 
     await expect(provider.getDocFormats()).resolves.toEqual([
       { name: "docx", type: "word", actions: ["edit"], convert: [], mime: [] },
@@ -20,13 +32,26 @@ describe("FormatsProvider", () => {
   });
 
   test("uses cached document formats within the cache TTL", async () => {
-    const { FormatsProvider } = await import("../../../src/domain/document-server/formats-provider.ts");
+    const { FormatsProvider } =
+      await import("../../../src/domain/document-server/formats-provider.ts");
     let callCount = 0;
     const fetchImpl = async () => {
       callCount += 1;
-      return jsonResponse([{ name: "xlsx", type: "cell", actions: ["edit"], convert: [], mime: [] }]);
+      return jsonResponse([
+        {
+          name: "xlsx",
+          type: "cell",
+          actions: ["edit"],
+          convert: [],
+          mime: [],
+        },
+      ]);
     };
-    const provider = new FormatsProvider("https://document-server.example", fetchImpl, () => 1_000);
+    const provider = new FormatsProvider(
+      "https://document-server.example",
+      fetchImpl,
+      () => 1_000,
+    );
 
     expect(await provider.getDocFormats()).toHaveLength(1);
     expect(await provider.getDocFormats()).toHaveLength(1);
@@ -34,9 +59,14 @@ describe("FormatsProvider", () => {
   });
 
   test("throws when the Document Server metadata request fails", async () => {
-    const { FormatsProvider } = await import("../../../src/domain/document-server/formats-provider.ts");
-    const fetchImpl = async () => new Response("nope", { status: 503, statusText: "Unavailable" });
-    const provider = new FormatsProvider("https://document-server.example", fetchImpl);
+    const { FormatsProvider } =
+      await import("../../../src/domain/document-server/formats-provider.ts");
+    const fetchImpl = async () =>
+      new Response("nope", { status: 503, statusText: "Unavailable" });
+    const provider = new FormatsProvider(
+      "https://document-server.example",
+      fetchImpl,
+    );
 
     await expect(provider.getDocFormats()).rejects.toThrow(
       "Failed to fetch formats from Document Server: 503 Unavailable",
@@ -44,12 +74,27 @@ describe("FormatsProvider", () => {
   });
 
   test("finds formats by extension", async () => {
-    const { FormatsProvider } = await import("../../../src/domain/document-server/formats-provider.ts");
-    const provider = new FormatsProvider("https://document-server.example", async () =>
-      jsonResponse([
-        { name: "docx", type: "word", actions: ["edit"], convert: [], mime: [] },
-        { name: "pdf", type: "pdf", actions: ["view"], convert: [], mime: [] },
-      ]),
+    const { FormatsProvider } =
+      await import("../../../src/domain/document-server/formats-provider.ts");
+    const provider = new FormatsProvider(
+      "https://document-server.example",
+      async () =>
+        jsonResponse([
+          {
+            name: "docx",
+            type: "word",
+            actions: ["edit"],
+            convert: [],
+            mime: [],
+          },
+          {
+            name: "pdf",
+            type: "pdf",
+            actions: ["view"],
+            convert: [],
+            mime: [],
+          },
+        ]),
     );
 
     await expect(provider.getDocFormatByExtension("pdf")).resolves.toEqual({
@@ -59,31 +104,61 @@ describe("FormatsProvider", () => {
       convert: [],
       mime: [],
     });
-    await expect(provider.getDocFormatByExtension("txt")).resolves.toBeUndefined();
+    await expect(
+      provider.getDocFormatByExtension("txt"),
+    ).resolves.toBeUndefined();
   });
 
   test("aborts the fetch when the timeout expires", async () => {
-    const { FormatsProvider } = await import("../../../src/domain/document-server/formats-provider.ts");
+    const { FormatsProvider } =
+      await import("../../../src/domain/document-server/formats-provider.ts");
     const fetchImpl = (_url: string, init?: RequestInit) =>
       new Promise<Response>((_resolve, reject) => {
-        init?.signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
+        init?.signal?.addEventListener("abort", () =>
+          reject(new DOMException("Aborted", "AbortError")),
+        );
       });
-    const provider = new FormatsProvider("https://document-server.example", fetchImpl, Date.now, 1);
+    const provider = new FormatsProvider(
+      "https://document-server.example",
+      fetchImpl,
+      Date.now,
+      1,
+    );
 
-    await expect(provider.getDocFormats()).rejects.toMatchObject({ name: "AbortError" });
+    await expect(provider.getDocFormats()).rejects.toMatchObject({
+      name: "AbortError",
+    });
   });
 
   test("lists only viewable extensions", async () => {
-    const { FormatsProvider } = await import("../../../src/domain/document-server/formats-provider.ts");
-    const provider = new FormatsProvider("https://document-server.example", async () =>
-      jsonResponse([
-        { name: "docx", type: "word", actions: ["edit"], convert: [], mime: [] },
-        { name: "bin", type: "", actions: [], convert: [], mime: [] },
-        { name: "pdf", type: "pdf", actions: ["view"], convert: [], mime: [] },
-      ]),
+    const { FormatsProvider } =
+      await import("../../../src/domain/document-server/formats-provider.ts");
+    const provider = new FormatsProvider(
+      "https://document-server.example",
+      async () =>
+        jsonResponse([
+          {
+            name: "docx",
+            type: "word",
+            actions: ["edit"],
+            convert: [],
+            mime: [],
+          },
+          { name: "bin", type: "", actions: [], convert: [], mime: [] },
+          {
+            name: "pdf",
+            type: "pdf",
+            actions: ["view"],
+            convert: [],
+            mime: [],
+          },
+        ]),
     );
 
-    await expect(provider.getListViewableExtensions()).resolves.toEqual(["docx", "pdf"]);
+    await expect(provider.getListViewableExtensions()).resolves.toEqual([
+      "docx",
+      "pdf",
+    ]);
   });
 });
 

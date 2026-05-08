@@ -14,7 +14,9 @@ import {
 export const MAX_CHUNK_BYTES = 512 * 1024;
 
 const TEMPLATES_DIR_PATH = import.meta.filename.endsWith(".ts")
-  ? fileURLToPath(new URL("../../../assets/document-templates/", import.meta.url))
+  ? fileURLToPath(
+      new URL("../../../assets/document-templates/", import.meta.url),
+    )
   : resolve(dirname(process.argv[1]), "assets", "document-templates");
 
 /**
@@ -23,7 +25,10 @@ const TEMPLATES_DIR_PATH = import.meta.filename.endsWith(".ts")
  * 2. Language only:   assets/document-templates/{language}/new.{ext}
  * 3. Default:         assets/document-templates/default/new.{ext}
  */
-async function resolveBlankFilePath(locale: string, fileType: string): Promise<{ filePath: string; size: number } | null> {
+async function resolveBlankFilePath(
+  locale: string,
+  fileType: string,
+): Promise<{ filePath: string; size: number } | null> {
   const language = locale.split("-")[0];
 
   const candidates = [locale];
@@ -59,7 +64,8 @@ type ReadFileContentDeps = {
 
 export function createReadFileContentHandler(deps: ReadFileContentDeps = {}) {
   const getMode = deps.getTransportMode ?? getTransportMode;
-  const resolveLocalFile = deps.resolveAllowedLocalFile ?? resolveAllowedLocalFile;
+  const resolveLocalFile =
+    deps.resolveAllowedLocalFile ?? resolveAllowedLocalFile;
 
   return async ({ url, offset, byteCount }: ReadFileContentInput) => {
     let filePath: string | undefined = undefined;
@@ -80,7 +86,9 @@ export function createReadFileContentHandler(deps: ReadFileContentDeps = {}) {
       if (!resolved) {
         return {
           content: [],
-          structuredContent: { error: `Template not found for locale "${locale}", type "${fileType}".` },
+          structuredContent: {
+            error: `Template not found for locale "${locale}", type "${fileType}".`,
+          },
         };
       }
 
@@ -92,7 +100,9 @@ export function createReadFileContentHandler(deps: ReadFileContentDeps = {}) {
       if (getMode() !== "stdio") {
         return {
           content: [],
-          structuredContent: { error: `Local file access is only supported with stdio transport.` },
+          structuredContent: {
+            error: `Local file access is only supported with stdio transport.`,
+          },
         };
       }
 
@@ -100,7 +110,9 @@ export function createReadFileContentHandler(deps: ReadFileContentDeps = {}) {
       if (!resolved.ok) {
         return {
           content: [],
-          structuredContent: { error: formatLocalFileAccessError(url, resolved.reason) },
+          structuredContent: {
+            error: formatLocalFileAccessError(url, resolved.reason),
+          },
         };
       }
       filePath = resolved.filePath;
@@ -110,7 +122,9 @@ export function createReadFileContentHandler(deps: ReadFileContentDeps = {}) {
     if (!filePath) {
       return {
         content: [],
-        structuredContent: { error: `Invalid path format. Expected blank://{locale}/{fileType} or file:// URL, got: ${url}` },
+        structuredContent: {
+          error: `Invalid path format. Expected blank://{locale}/{fileType} or file:// URL, got: ${url}`,
+        },
       };
     }
 
@@ -153,10 +167,20 @@ export const readFileContent: McpTool = {
     server.registerTool(
       "read_file_content",
       {
-        description: "Read a chunk of a document file as base64-encoded bytes. App-only — called by the editor UI to stream files to the client.",
+        description:
+          "Read a chunk of a document file as base64-encoded bytes. App-only — called by the editor UI to stream files to the client.",
         inputSchema: {
-          url: z.string().describe("Blank file URL in format blank://{locale}/{fileType}, or local file URL (stdio transport only)."),
-          offset: z.number().int().min(0).default(0).describe("Byte offset to start reading from."),
+          url: z
+            .string()
+            .describe(
+              "Blank file URL in format blank://{locale}/{fileType}, or local file URL (stdio transport only).",
+            ),
+          offset: z
+            .number()
+            .int()
+            .min(0)
+            .default(0)
+            .describe("Byte offset to start reading from."),
           byteCount: z
             .number()
             .min(1)
@@ -166,7 +190,7 @@ export const readFileContent: McpTool = {
         },
         _meta: { visibility: ["app"] },
       },
-      createReadFileContentHandler()
+      createReadFileContentHandler(),
     );
   },
 };

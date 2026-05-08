@@ -1,6 +1,4 @@
-import {
-  registerAppTool,
-} from "@modelcontextprotocol/ext-apps/server";
+import { registerAppTool } from "@modelcontextprotocol/ext-apps/server";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { CONFIG } from "../../config.js";
@@ -17,7 +15,9 @@ export function getBlankFileUrl(locale: string, fileType: FileType): string {
 }
 
 export function getFileName(fileName: string, fileType: FileType): string {
-  return fileName.endsWith(`.${fileType}`) ? fileName : `${fileName}.${fileType}`;
+  return fileName.endsWith(`.${fileType}`)
+    ? fileName
+    : `${fileName}.${fileType}`;
 }
 
 type CreateFileInput = {
@@ -34,7 +34,8 @@ type CreateFileDeps = {
 
 export function createCreateFileHandler(deps: CreateFileDeps = {}) {
   const buildEditorConfig = deps.createEditorConfig ?? createEditorConfig;
-  const documentServerBaseUrl = deps.documentServerBaseUrl ?? CONFIG.DOCUMENT_SERVER_BASE_URL;
+  const documentServerBaseUrl =
+    deps.documentServerBaseUrl ?? CONFIG.DOCUMENT_SERVER_BASE_URL;
   const randomUUID = deps.randomUUID ?? crypto.randomUUID.bind(crypto);
 
   return async ({ fileName, fileType, locale }: CreateFileInput) => {
@@ -65,17 +66,29 @@ export const createFile: McpTool = {
       "create_file",
       {
         title: "Create File",
-        description: "Create a new blank document, spreadsheet, or presentation and open it in the ONLYOFFICE Editor. Returns a sessionId required by list_editor_tools, call_editor_tool, and save_file.",
+        description:
+          "Create a new blank document, spreadsheet, or presentation and open it in the ONLYOFFICE Editor. Returns a sessionId required by list_editor_tools, call_editor_tool, and save_file.",
         inputSchema: {
-          fileName: z.string().describe("Name for the new file, with or without extension (e.g. 'My Report')."),
-          fileType: fileTypeSchema.describe("Document type: 'docx' for text document, 'xlsx' for spreadsheet, 'pptx' for presentation."),
-          locale: z.string().optional().describe("Template locale (e.g. 'en', 'en-US', 'en-GB', 'de', 'es'). Determines the language of the template content."),
+          fileName: z
+            .string()
+            .describe(
+              "Name for the new file, with or without extension (e.g. 'My Report').",
+            ),
+          fileType: fileTypeSchema.describe(
+            "Document type: 'docx' for text document, 'xlsx' for spreadsheet, 'pptx' for presentation.",
+          ),
+          locale: z
+            .string()
+            .optional()
+            .describe(
+              "Template locale (e.g. 'en', 'en-US', 'en-GB', 'de', 'es'). Determines the language of the template content.",
+            ),
         },
         _meta: {
           ui: { resourceUri: EDITOR_APP_RESOURCE_URI },
         },
       },
-      createCreateFileHandler()
+      createCreateFileHandler(),
     );
   },
 };

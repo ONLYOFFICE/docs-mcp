@@ -11,7 +11,8 @@ const isDevelopment = process.env.NODE_ENV === "development";
 const prefixedLogger = createLogger();
 for (const level of ["info", "warn", "error"] as const) {
   const fn = prefixedLogger[level];
-  prefixedLogger[level] = (msg, opts) => fn(msg.replace(/^/mg, "[vite] "), opts);
+  prefixedLogger[level] = (msg, opts) =>
+    fn(msg.replace(/^/gm, "[vite] "), opts);
 }
 
 export default defineConfig({

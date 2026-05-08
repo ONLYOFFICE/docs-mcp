@@ -6,11 +6,14 @@ process.env.DOCUMENT_SERVER_JWT_SECRET = "test-secret";
 
 describe("poll-editor-commands", () => {
   test("returns commands from the command queue", async () => {
-    const { createPollEditorCommandsHandler } = await import(
-      "../../../src/tools/definitions/poll-editor-commands.ts"
-    );
+    const { createPollEditorCommandsHandler } =
+      await import("../../../src/tools/definitions/poll-editor-commands.ts");
     const commands: Command[] = [
-      { id: "command-1", type: "aiListTools", payload: { documentType: "word" } },
+      {
+        id: "command-1",
+        type: "aiListTools",
+        payload: { documentType: "word" },
+      },
     ];
     const calls: string[] = [];
     const handler = createPollEditorCommandsHandler({
@@ -32,7 +35,8 @@ describe("poll-editor-commands", () => {
   });
 
   test("registers the MCP tool definition", async () => {
-    const { pollEditorCommands } = await import("../../../src/tools/definitions/poll-editor-commands.ts");
+    const { pollEditorCommands } =
+      await import("../../../src/tools/definitions/poll-editor-commands.ts");
     const registrations: unknown[] = [];
     const server = {
       registerTool: (...args: unknown[]) => {

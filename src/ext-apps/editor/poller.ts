@@ -1,5 +1,8 @@
 import type { App } from "@modelcontextprotocol/ext-apps";
-import type { CallToolRequest, CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import type {
+  CallToolRequest,
+  CallToolResult,
+} from "@modelcontextprotocol/sdk/types.js";
 
 export interface PollerOptions {
   /** Name of the app-only MCP tool to call (visibility: ["app"]). */

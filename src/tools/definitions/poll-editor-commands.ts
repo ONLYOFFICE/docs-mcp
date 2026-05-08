@@ -1,6 +1,9 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { commandQueue, type Command } from "../../domain/editor-session/command-queue.js";
+import {
+  commandQueue,
+  type Command,
+} from "../../domain/editor-session/command-queue.js";
 import type { McpTool } from "../index.js";
 
 type PollEditorCommandsInput = {
@@ -13,7 +16,9 @@ type PollEditorCommandsDeps = {
   };
 };
 
-export function createPollEditorCommandsHandler(deps: PollEditorCommandsDeps = {}) {
+export function createPollEditorCommandsHandler(
+  deps: PollEditorCommandsDeps = {},
+) {
   const queue = deps.commandQueue ?? commandQueue;
 
   return async ({ sessionId }: PollEditorCommandsInput) => {
@@ -27,13 +32,16 @@ export const pollEditorCommands: McpTool = {
     server.registerTool(
       "poll_editor_commands",
       {
-        description: "Long-poll for pending commands queued for the document editor client. App-only — called by the editor UI on a regular interval to receive server-issued commands.",
+        description:
+          "Long-poll for pending commands queued for the document editor client. App-only — called by the editor UI on a regular interval to receive server-issued commands.",
         inputSchema: {
-          sessionId: z.string().describe("Session ID returned by open_file or create_file."),
+          sessionId: z
+            .string()
+            .describe("Session ID returned by open_file or create_file."),
         },
         _meta: { visibility: ["app"] },
       },
-      createPollEditorCommandsHandler()
+      createPollEditorCommandsHandler(),
     );
   },
 };

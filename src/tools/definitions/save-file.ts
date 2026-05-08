@@ -9,7 +9,11 @@ type SaveFileInput = {
 
 type SaveFileDeps = {
   commandQueue?: {
-    enqueue(sessionId: string, command: { id: string; type: "saveFile" }, timeoutMs: number): Promise<unknown>;
+    enqueue(
+      sessionId: string,
+      command: { id: string; type: "saveFile" },
+      timeoutMs: number,
+    ): Promise<unknown>;
   };
   randomUUID?: () => string;
 };
@@ -19,13 +23,19 @@ export function createSaveFileHandler(deps: SaveFileDeps = {}) {
   const randomUUID = deps.randomUUID ?? crypto.randomUUID.bind(crypto);
 
   return async ({ sessionId }: SaveFileInput) => {
-    await queue.enqueue(sessionId, { id: randomUUID(), type: "saveFile" }, 10000);
+    await queue.enqueue(
+      sessionId,
+      { id: randomUUID(), type: "saveFile" },
+      10000,
+    );
 
     return {
-      content: [{
-        type: "text" as const,
-        text: "Save command dispatched. Please check your browser's download folder.",
-      }],
+      content: [
+        {
+          type: "text" as const,
+          text: "Save command dispatched. Please check your browser's download folder.",
+        },
+      ],
     };
   };
 }
@@ -35,7 +45,8 @@ export const saveFile: McpTool = {
     server.registerTool(
       "save_file",
       {
-        description: "Trigger a download of the currently open document to the user's browser. Call after the user has finished editing and wants to save the file locally.",
+        description:
+          "Trigger a download of the currently open document to the user's browser. Call after the user has finished editing and wants to save the file locally.",
         annotations: {
           readOnlyHint: false,
           destructiveHint: false,
@@ -43,10 +54,12 @@ export const saveFile: McpTool = {
           openWorldHint: false,
         },
         inputSchema: {
-          sessionId: z.string().describe("Session ID returned by open_file or create_file."),
+          sessionId: z
+            .string()
+            .describe("Session ID returned by open_file or create_file."),
         },
       },
-      createSaveFileHandler()
+      createSaveFileHandler(),
     );
   },
 };

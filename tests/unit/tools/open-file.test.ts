@@ -5,7 +5,8 @@ process.env.DOCUMENT_SERVER_JWT_SECRET = "test-secret";
 
 describe("open-file", () => {
   test("returns an error when no file source is provided", async () => {
-    const { createOpenFileHandler } = await import("../../../src/tools/definitions/open-file.ts");
+    const { createOpenFileHandler } =
+      await import("../../../src/tools/definitions/open-file.ts");
     const handler = createOpenFileHandler();
 
     await expect(handler({ mode: "edit" })).resolves.toEqual({
@@ -20,7 +21,8 @@ describe("open-file", () => {
   });
 
   test("opens an allowed remote file URL", async () => {
-    const { createOpenFileHandler } = await import("../../../src/tools/definitions/open-file.ts");
+    const { createOpenFileHandler } =
+      await import("../../../src/tools/definitions/open-file.ts");
     const configCalls: unknown[] = [];
     const handler = createOpenFileHandler({
       randomUUID: () => "session-1",
@@ -29,20 +31,25 @@ describe("open-file", () => {
       getDocumentType: async () => "word",
       createEditorConfig: async (params) => {
         configCalls.push(params);
-        return { document: { title: params.fileName }, editorConfig: { mode: params.mode } };
+        return {
+          document: { title: params.fileName },
+          editorConfig: { mode: params.mode },
+        };
       },
     });
 
     const result = await handler({
       mode: "view",
-      fileUrl: "https://files.example.com/reports/Quarterly%20Report.docx?download=1",
+      fileUrl:
+        "https://files.example.com/reports/Quarterly%20Report.docx?download=1",
     });
 
     expect(configCalls).toEqual([
       {
         sessionId: "session-1",
         fileName: "Quarterly Report.docx",
-        fileUrl: "https://files.example.com/reports/Quarterly%20Report.docx?download=1",
+        fileUrl:
+          "https://files.example.com/reports/Quarterly%20Report.docx?download=1",
         mode: "view",
       },
     ]);
@@ -51,13 +58,17 @@ describe("open-file", () => {
       structuredContent: {
         sessionId: "session-1",
         documentServerBaseUrl: "https://document-server.example",
-        config: { document: { title: "Quarterly Report.docx" }, editorConfig: { mode: "view" } },
+        config: {
+          document: { title: "Quarterly Report.docx" },
+          editorConfig: { mode: "view" },
+        },
       },
     });
   });
 
   test("returns formatted remote URL access errors", async () => {
-    const { createOpenFileHandler } = await import("../../../src/tools/definitions/open-file.ts");
+    const { createOpenFileHandler } =
+      await import("../../../src/tools/definitions/open-file.ts");
     const handler = createOpenFileHandler({
       validateAllowedDocumentFileUrl: () => ({
         ok: false,
@@ -67,7 +78,10 @@ describe("open-file", () => {
     });
 
     await expect(
-      handler({ mode: "edit", fileUrl: "https://files.example.com/report.docx" }),
+      handler({
+        mode: "edit",
+        fileUrl: "https://files.example.com/report.docx",
+      }),
     ).resolves.toEqual({
       content: [
         {
@@ -80,7 +94,8 @@ describe("open-file", () => {
   });
 
   test("opens an OpenAI file object", async () => {
-    const { createOpenFileHandler } = await import("../../../src/tools/definitions/open-file.ts");
+    const { createOpenFileHandler } =
+      await import("../../../src/tools/definitions/open-file.ts");
     const configCalls: unknown[] = [];
     const handler = createOpenFileHandler({
       randomUUID: () => "session-1",
@@ -121,7 +136,8 @@ describe("open-file", () => {
   });
 
   test("returns supported extensions when the file type is not supported", async () => {
-    const { createOpenFileHandler } = await import("../../../src/tools/definitions/open-file.ts");
+    const { createOpenFileHandler } =
+      await import("../../../src/tools/definitions/open-file.ts");
     const handler = createOpenFileHandler({
       validateAllowedDocumentFileUrl: () => ({ ok: true }),
       getDocumentType: async () => null,
@@ -133,7 +149,10 @@ describe("open-file", () => {
     });
 
     await expect(
-      handler({ mode: "edit", fileUrl: "https://files.example.com/archive.zip" }),
+      handler({
+        mode: "edit",
+        fileUrl: "https://files.example.com/archive.zip",
+      }),
     ).resolves.toEqual({
       content: [
         {
@@ -146,7 +165,8 @@ describe("open-file", () => {
   });
 
   test("rejects local file URLs outside stdio transport", async () => {
-    const { createOpenFileHandler } = await import("../../../src/tools/definitions/open-file.ts");
+    const { createOpenFileHandler } =
+      await import("../../../src/tools/definitions/open-file.ts");
     let resolverCalled = false;
     const handler = createOpenFileHandler({
       getTransportMode: () => "http",
@@ -156,7 +176,9 @@ describe("open-file", () => {
       },
     });
 
-    await expect(handler({ mode: "edit", fileUrl: "file:///tmp/report.docx" })).resolves.toEqual({
+    await expect(
+      handler({ mode: "edit", fileUrl: "file:///tmp/report.docx" }),
+    ).resolves.toEqual({
       content: [
         {
           type: "text",
@@ -169,13 +191,19 @@ describe("open-file", () => {
   });
 
   test("returns formatted local file access errors", async () => {
-    const { createOpenFileHandler } = await import("../../../src/tools/definitions/open-file.ts");
+    const { createOpenFileHandler } =
+      await import("../../../src/tools/definitions/open-file.ts");
     const handler = createOpenFileHandler({
       getTransportMode: () => "stdio",
-      resolveAllowedLocalFile: async () => ({ ok: false, reason: "outside_allowed_roots" }),
+      resolveAllowedLocalFile: async () => ({
+        ok: false,
+        reason: "outside_allowed_roots",
+      }),
     });
 
-    await expect(handler({ mode: "edit", fileUrl: "file:///tmp/report.docx" })).resolves.toEqual({
+    await expect(
+      handler({ mode: "edit", fileUrl: "file:///tmp/report.docx" }),
+    ).resolves.toEqual({
       content: [
         {
           type: "text",
@@ -187,13 +215,18 @@ describe("open-file", () => {
   });
 
   test("opens an allowed local file URL in stdio transport", async () => {
-    const { createOpenFileHandler } = await import("../../../src/tools/definitions/open-file.ts");
+    const { createOpenFileHandler } =
+      await import("../../../src/tools/definitions/open-file.ts");
     const configCalls: unknown[] = [];
     const handler = createOpenFileHandler({
       randomUUID: () => "session-1",
       documentServerBaseUrl: "https://document-server.example",
       getTransportMode: () => "stdio",
-      resolveAllowedLocalFile: async () => ({ ok: true, filePath: "C:\\tmp\\Report.docx", size: 7 }),
+      resolveAllowedLocalFile: async () => ({
+        ok: true,
+        filePath: "C:\\tmp\\Report.docx",
+        size: 7,
+      }),
       getDocumentType: async () => "word",
       createEditorConfig: async (params) => {
         configCalls.push(params);
@@ -201,7 +234,10 @@ describe("open-file", () => {
       },
     });
 
-    const result = await handler({ mode: "edit", fileUrl: "file:///C:/tmp/Report.docx" });
+    const result = await handler({
+      mode: "edit",
+      fileUrl: "file:///C:/tmp/Report.docx",
+    });
 
     expect(configCalls).toEqual([
       {
@@ -223,7 +259,8 @@ describe("open-file", () => {
   });
 
   test("registers the MCP app tool definition", async () => {
-    const { openFile } = await import("../../../src/tools/definitions/open-file.ts");
+    const { openFile } =
+      await import("../../../src/tools/definitions/open-file.ts");
     const registrations: unknown[] = [];
     const server = {
       registerTool: (...args: unknown[]) => {

@@ -19,12 +19,7 @@ type CreateEditorConfigDeps = {
 };
 
 export async function createEditorConfig(
-  {
-    sessionId,
-    fileName,
-    fileUrl,
-    mode,
-  }: CreateEditorConfigParams,
+  { sessionId, fileName, fileUrl, mode }: CreateEditorConfigParams,
   deps: CreateEditorConfigDeps = {},
 ) {
   const getType = deps.getDocumentType ?? getDocumentType;
@@ -39,7 +34,7 @@ export async function createEditorConfig(
       url: fileUrl,
       permissions: {
         edit: await getIsEditable(extension),
-      }
+      },
     },
     documentType: await getType(extension),
     editorConfig: {
@@ -57,9 +52,13 @@ export async function createEditorConfig(
 
   return {
     ...config,
-    token: (deps.signJwt ?? jwt.sign)(config, deps.jwtSecret ?? CONFIG.DOCUMENT_SERVER_JWT_SECRET, {
-      algorithm: deps.jwtAlgorithm ?? CONFIG.DOCUMENT_SERVER_JWT_ALGORITHM,
-      expiresIn: deps.jwtExpiresIn ?? CONFIG.DOCUMENT_SERVER_JWT_EXPIRES_IN,
-    }),
+    token: (deps.signJwt ?? jwt.sign)(
+      config,
+      deps.jwtSecret ?? CONFIG.DOCUMENT_SERVER_JWT_SECRET,
+      {
+        algorithm: deps.jwtAlgorithm ?? CONFIG.DOCUMENT_SERVER_JWT_ALGORITHM,
+        expiresIn: deps.jwtExpiresIn ?? CONFIG.DOCUMENT_SERVER_JWT_EXPIRES_IN,
+      },
+    ),
   };
 }

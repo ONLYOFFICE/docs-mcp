@@ -5,7 +5,10 @@ import cors from "cors";
 import type { CorsOptions } from "cors";
 import type { Request, Response } from "express";
 import { CONFIG } from "../config.js";
-import { createHttpRateLimitMiddleware, createInFlightLimitMiddleware } from "./rate-limit.js";
+import {
+  createHttpRateLimitMiddleware,
+  createInFlightLimitMiddleware,
+} from "./rate-limit.js";
 
 const LOCALHOST_ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]"];
 
@@ -26,9 +29,9 @@ function normalizeOrigin(origin: string): string {
 function createCorsOptions(): CorsOptions {
   const allowAllOrigins = CONFIG.HTTP_CORS_ALLOWED_ORIGINS.includes("*");
   const allowedOrigins = new Set(
-    CONFIG.HTTP_CORS_ALLOWED_ORIGINS
-      .filter((origin) => origin !== "*")
-      .map((origin) => normalizeOrigin(origin)),
+    CONFIG.HTTP_CORS_ALLOWED_ORIGINS.filter((origin) => origin !== "*").map(
+      (origin) => normalizeOrigin(origin),
+    ),
   );
 
   return {
@@ -56,18 +59,28 @@ export async function startStreamableHTTPServer(
   createServer: () => McpServer,
   options: StreamableHTTPServerOptions,
 ): Promise<void> {
-  const allowedHosts = [...new Set([...LOCALHOST_ALLOWED_HOSTS, options.host, ...CONFIG.HTTP_ALLOWED_HOSTS])];
+  const allowedHosts = [
+    ...new Set([
+      ...LOCALHOST_ALLOWED_HOSTS,
+      options.host,
+      ...CONFIG.HTTP_ALLOWED_HOSTS,
+    ]),
+  ];
   const app = createMcpExpressApp({ host: options.host, allowedHosts });
   app.set("trust proxy", CONFIG.HTTP_TRUST_PROXY);
   app.use(cors(createCorsOptions()));
   app.get("/health", handleHealthCheck);
-  app.use(createHttpRateLimitMiddleware({
-    windowMs: CONFIG.HTTP_RATE_LIMIT_WINDOW_MS,
-    maxRequests: CONFIG.HTTP_RATE_LIMIT_MAX_REQUESTS,
-  }));
-  app.use(createInFlightLimitMiddleware({
-    maxRequests: CONFIG.HTTP_RATE_LIMIT_MAX_IN_FLIGHT,
-  }));
+  app.use(
+    createHttpRateLimitMiddleware({
+      windowMs: CONFIG.HTTP_RATE_LIMIT_WINDOW_MS,
+      maxRequests: CONFIG.HTTP_RATE_LIMIT_MAX_REQUESTS,
+    }),
+  );
+  app.use(
+    createInFlightLimitMiddleware({
+      maxRequests: CONFIG.HTTP_RATE_LIMIT_MAX_IN_FLIGHT,
+    }),
+  );
 
   app.all("/mcp", async (req: Request, res: Response) => {
     const server = createServer();
@@ -100,7 +113,9 @@ export async function startStreamableHTTPServer(
       console.error("Failed to start server:", err);
       process.exit(1);
     }
-    console.log(`MCP server listening on http://${options.host}:${options.port}/mcp`);
+    console.log(
+      `MCP server listening on http://${options.host}:${options.port}/mcp`,
+    );
   });
 
   const shutdown = () => {

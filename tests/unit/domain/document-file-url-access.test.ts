@@ -5,9 +5,8 @@ process.env.DOCUMENT_SERVER_JWT_SECRET = "test-secret";
 
 describe("document-file-url-access", () => {
   test("rejects invalid URLs", async () => {
-    const { validateAllowedDocumentFileUrl } = await import(
-      "../../../src/domain/document-file-url-access.ts"
-    );
+    const { validateAllowedDocumentFileUrl } =
+      await import("../../../src/domain/document-file-url-access.ts");
 
     expect(validateAllowedDocumentFileUrl("not a url", ["*"])).toEqual({
       ok: false,
@@ -16,11 +15,12 @@ describe("document-file-url-access", () => {
   });
 
   test("rejects unsupported URL protocols", async () => {
-    const { validateAllowedDocumentFileUrl } = await import(
-      "../../../src/domain/document-file-url-access.ts"
-    );
+    const { validateAllowedDocumentFileUrl } =
+      await import("../../../src/domain/document-file-url-access.ts");
 
-    expect(validateAllowedDocumentFileUrl("ftp://example.com/file.docx", ["*"])).toEqual({
+    expect(
+      validateAllowedDocumentFileUrl("ftp://example.com/file.docx", ["*"]),
+    ).toEqual({
       ok: false,
       reason: "unsupported_protocol",
       origin: "ftp://example.com",
@@ -28,11 +28,12 @@ describe("document-file-url-access", () => {
   });
 
   test("requires configured allowed origins", async () => {
-    const { validateAllowedDocumentFileUrl } = await import(
-      "../../../src/domain/document-file-url-access.ts"
-    );
+    const { validateAllowedDocumentFileUrl } =
+      await import("../../../src/domain/document-file-url-access.ts");
 
-    expect(validateAllowedDocumentFileUrl("https://example.com/file.docx", [])).toEqual({
+    expect(
+      validateAllowedDocumentFileUrl("https://example.com/file.docx", []),
+    ).toEqual({
       ok: false,
       reason: "not_configured",
       origin: "https://example.com",
@@ -40,25 +41,35 @@ describe("document-file-url-access", () => {
   });
 
   test("allows any HTTP origin when wildcard is configured", async () => {
-    const { validateAllowedDocumentFileUrl } = await import(
-      "../../../src/domain/document-file-url-access.ts"
-    );
+    const { validateAllowedDocumentFileUrl } =
+      await import("../../../src/domain/document-file-url-access.ts");
 
-    expect(validateAllowedDocumentFileUrl("https://example.com/file.docx", ["*"])).toEqual({
+    expect(
+      validateAllowedDocumentFileUrl("https://example.com/file.docx", ["*"]),
+    ).toEqual({
       ok: true,
     });
   });
 
   test("allows matching origins and rejects other origins", async () => {
-    const { validateAllowedDocumentFileUrl } = await import(
-      "../../../src/domain/document-file-url-access.ts"
-    );
+    const { validateAllowedDocumentFileUrl } =
+      await import("../../../src/domain/document-file-url-access.ts");
     const allowedOrigins = ["https://files.example.com/path-is-ignored"];
 
-    expect(validateAllowedDocumentFileUrl("https://files.example.com/report.docx", allowedOrigins)).toEqual({
+    expect(
+      validateAllowedDocumentFileUrl(
+        "https://files.example.com/report.docx",
+        allowedOrigins,
+      ),
+    ).toEqual({
       ok: true,
     });
-    expect(validateAllowedDocumentFileUrl("https://other.example.com/report.docx", allowedOrigins)).toEqual({
+    expect(
+      validateAllowedDocumentFileUrl(
+        "https://other.example.com/report.docx",
+        allowedOrigins,
+      ),
+    ).toEqual({
       ok: false,
       reason: "outside_allowed_origins",
       origin: "https://other.example.com",
@@ -66,13 +77,15 @@ describe("document-file-url-access", () => {
   });
 
   test("formats access errors", async () => {
-    const { formatDocumentFileUrlAccessError } = await import(
-      "../../../src/domain/document-file-url-access.ts"
-    );
+    const { formatDocumentFileUrlAccessError } =
+      await import("../../../src/domain/document-file-url-access.ts");
 
-    expect(formatDocumentFileUrlAccessError("notaurl", { ok: false, reason: "invalid_url" })).toBe(
-      "Invalid document file URL: notaurl",
-    );
+    expect(
+      formatDocumentFileUrlAccessError("notaurl", {
+        ok: false,
+        reason: "invalid_url",
+      }),
+    ).toBe("Invalid document file URL: notaurl");
     expect(
       formatDocumentFileUrlAccessError("https://example.com/file.docx", {
         ok: false,

@@ -19,7 +19,10 @@ interface PendingCommand extends Command {
 type SessionId = string;
 
 export class CommandTimeoutError extends Error {
-  constructor(public readonly commandId: string, public readonly sessionId: string) {
+  constructor(
+    public readonly commandId: string,
+    public readonly sessionId: string,
+  ) {
     super(`Command "${commandId}" timed out for session "${sessionId}"`);
     this.name = "CommandTimeoutError";
   }
@@ -29,9 +32,16 @@ export class CommandQueue {
   private sessions = new Map<SessionId, Map<string, PendingCommand>>();
   private pollWaiters = new Map<SessionId, () => void>();
 
-  enqueue(sessionId: SessionId, command: Command, timeoutMs: number): Promise<unknown> {
+  enqueue(
+    sessionId: SessionId,
+    command: Command,
+    timeoutMs: number,
+  ): Promise<unknown> {
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => this.expire(sessionId, command.id), timeoutMs);
+      const timer = setTimeout(
+        () => this.expire(sessionId, command.id),
+        timeoutMs,
+      );
 
       const pending: PendingCommand = {
         ...command,
@@ -130,7 +140,9 @@ export class CommandQueue {
     if (session.size === 0) this.sessions.delete(sessionId);
   }
 
-  private getOrCreateSession(sessionId: SessionId): Map<string, PendingCommand> {
+  private getOrCreateSession(
+    sessionId: SessionId,
+  ): Map<string, PendingCommand> {
     const existing = this.sessions.get(sessionId);
     if (existing) return existing;
 

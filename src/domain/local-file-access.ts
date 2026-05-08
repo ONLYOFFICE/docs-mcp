@@ -21,7 +21,10 @@ function normalizeForCompare(filePath: string): string {
 
 function isPathInsideRoot(filePath: string, root: string): boolean {
   const relative = path.relative(root, filePath);
-  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+  return (
+    relative === "" ||
+    (!relative.startsWith("..") && !path.isAbsolute(relative))
+  );
 }
 
 function localFileUrlToPath(uri: string): string | null {
@@ -48,12 +51,16 @@ async function resolveAllowedRoots(roots: string[]): Promise<string[]> {
   return resolvedRoots.filter((root): root is string => root !== null);
 }
 
-async function getAllowedRoots(roots = CONFIG.STDIO_LOCAL_FILE_ALLOWED_ROOTS): Promise<string[]> {
+async function getAllowedRoots(
+  roots = CONFIG.STDIO_LOCAL_FILE_ALLOWED_ROOTS,
+): Promise<string[]> {
   if (roots !== CONFIG.STDIO_LOCAL_FILE_ALLOWED_ROOTS) {
     return resolveAllowedRoots(roots);
   }
 
-  allowedRootsCache ??= resolveAllowedRoots(CONFIG.STDIO_LOCAL_FILE_ALLOWED_ROOTS);
+  allowedRootsCache ??= resolveAllowedRoots(
+    CONFIG.STDIO_LOCAL_FILE_ALLOWED_ROOTS,
+  );
 
   return allowedRootsCache;
 }
@@ -76,7 +83,9 @@ export async function resolveAllowedLocalFile(
   }
 
   const comparableFilePath = normalizeForCompare(filePath);
-  if (!allowedRoots.some((root) => isPathInsideRoot(comparableFilePath, root))) {
+  if (
+    !allowedRoots.some((root) => isPathInsideRoot(comparableFilePath, root))
+  ) {
     return { ok: false, reason: "outside_allowed_roots" };
   }
 
@@ -88,7 +97,10 @@ export async function resolveAllowedLocalFile(
   }
 }
 
-export function formatLocalFileAccessError(uri: string, reason: LocalFileAccessError): string {
+export function formatLocalFileAccessError(
+  uri: string,
+  reason: LocalFileAccessError,
+): string {
   switch (reason) {
     case "invalid_url":
       return `Invalid local file URL: ${uri}`;

@@ -22,7 +22,9 @@ export function getExtension(filename: string): string {
   return filename.slice(dotIndex + 1).toLowerCase();
 }
 
-export async function getDocumentType(extension: string): Promise<string | null> {
+export async function getDocumentType(
+  extension: string,
+): Promise<string | null> {
   const format = await formatsProvider.getDocFormatByExtension(extension);
 
   if (format?.type) return format.type;

@@ -1,13 +1,25 @@
 import type { App } from "@modelcontextprotocol/ext-apps";
-import type { CommandType, Command } from "../../domain/editor-session/command-queue.js";
+import type {
+  CommandType,
+  Command,
+} from "../../domain/editor-session/command-queue.js";
 import { Poller } from "./poller.js";
 
-declare const DocsAPI: { DocEditor: new (id: string, config: object) => DocEditor };
+declare const DocsAPI: {
+  DocEditor: new (id: string, config: object) => DocEditor;
+};
 
 interface Connector {
   callCommand(command: () => void, callback?: () => void): void;
-  executeMethod(method: string, params: object[], callback: (data: any) => void): void;
-  attachEvent(event: string, handler: (object: undefined | object) => void): void;
+  executeMethod(
+    method: string,
+    params: object[],
+    callback: (data: unknown) => void,
+  ): void;
+  attachEvent(
+    event: string,
+    handler: (object: undefined | object) => void,
+  ): void;
   sendEvent(event: string, params: object): void;
 }
 
@@ -17,6 +29,21 @@ interface DocEditor {
   downloadAs(): void;
   openDocument(data: Uint8Array): void;
 }
+
+export type EditorConfig = {
+  document: {
+    permissions?: {
+      edit?: boolean;
+    };
+    url?: string;
+  };
+  documentType?: string | null;
+  editorConfig: {
+    lang?: string;
+    mode?: string;
+  };
+  events?: Record<string, unknown>;
+};
 
 const log = {
   info: console.log.bind(console, "[ONLYOFFICE-EDITOR-CLIENT]"),
@@ -31,13 +58,20 @@ export class DocEditorClient {
   private pendingToolCommandId: string | null = null;
   private commandQueue: Command[] = [];
 
-  constructor(private readonly app: App, private readonly containerId: string, private readonly documentServerBaseUrl: string, private readonly sessionId: any) {}
+  constructor(
+    private readonly app: App,
+    private readonly containerId: string,
+    private readonly documentServerBaseUrl: string,
+    private readonly sessionId: string,
+  ) {}
 
   async init(): Promise<void> {
-    await this.loadScript(`${this.documentServerBaseUrl}/web-apps/apps/api/documents/api.js`);
+    await this.loadScript(
+      `${this.documentServerBaseUrl}/web-apps/apps/api/documents/api.js`,
+    );
   }
 
-  open(config: any, fileUrl?: string): void {
+  open(config: EditorConfig, fileUrl?: string): void {
     config.events = {
       onAppReady: () => {
         if (config.document?.url === "_data_" && fileUrl) {
@@ -45,7 +79,9 @@ export class DocEditorClient {
         }
       },
       onDocumentReady: () => {
-        const startPolling = config.document.permissions?.edit === true && config.editorConfig?.mode === "edit";
+        const startPolling =
+          config.document.permissions?.edit === true &&
+          config.editorConfig?.mode === "edit";
 
         this.onDocumentReady(startPolling);
       },
@@ -55,7 +91,7 @@ export class DocEditorClient {
     };
 
     this.docEditor = new DocsAPI.DocEditor(this.containerId, config);
-    this.documentType = config.documentType;
+    this.documentType = config.documentType ?? null;
   }
 
   private loadScript(src: string): Promise<void> {
@@ -91,23 +127,31 @@ export class DocEditorClient {
   }
 
   private completeCommand(commandId: string, result: unknown): Promise<void> {
-    return this.app.callServerTool({
-      name: "set_editor_command_result",
-      arguments: { sessionId: this.sessionId, commandId, result },
-    }).then(
-      () => {},
-      (err) => log.error("set_editor_command_result failed:", err),
-    ).finally(() => this.processNext());
+    return this.app
+      .callServerTool({
+        name: "set_editor_command_result",
+        arguments: { sessionId: this.sessionId, commandId, result },
+      })
+      .then(
+        () => {},
+        (err) => log.error("set_editor_command_result failed:", err),
+      )
+      .finally(() => this.processNext());
   }
 
   private aiListTools(command: Command): void {
     if (!this.connector) {
-      void this.completeCommand(command.id, { error: "Editor connector is not available." });
+      void this.completeCommand(command.id, {
+        error: "Editor connector is not available.",
+      });
       return;
     }
 
     this.connector.executeMethod("AI", [{ type: "Tools" }], (data) => {
-      let tools: { name: string; description: string }[] = Array.isArray(data) ? data : ((data as any)?.Tools ?? []);
+      const tools: { name: string; description: string }[] = Array.isArray(data)
+        ? data
+        : ((data as { Tools?: { name: string; description: string }[] })
+            ?.Tools ?? []);
 
       void this.completeCommand(command.id, {
         documentType: this.documentType,
@@ -118,7 +162,9 @@ export class DocEditorClient {
 
   private aiCallTool(command: Command): void {
     if (!this.connector) {
-      void this.completeCommand(command.id, { error: "Editor connector is not available." });
+      void this.completeCommand(command.id, {
+        error: "Editor connector is not available.",
+      });
       return;
     }
 
@@ -127,14 +173,19 @@ export class DocEditorClient {
       this.connector.sendEvent("ai_onCallTool", { name, arguments: args });
     } catch (error) {
       void this.completeCommand(command.id, {
-        error: error instanceof Error ? error.message : "Failed to call editor tool.",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to call editor tool.",
       });
     }
   }
 
   private saveFile(command: Command): void {
     if (!this.docEditor) {
-      void this.completeCommand(command.id, { error: "Document editor is not available." });
+      void this.completeCommand(command.id, {
+        error: "Document editor is not available.",
+      });
       return;
     }
 
@@ -160,7 +211,12 @@ export class DocEditorClient {
 
       const sc = result.structuredContent as
         | { error: string }
-        | { bytes: string; byteCount: number; totalBytes: number; hasMore: boolean };
+        | {
+            bytes: string;
+            byteCount: number;
+            totalBytes: number;
+            hasMore: boolean;
+          };
 
       if ("error" in sc) {
         log.error("read_file_content error:", sc.error);
@@ -208,9 +264,11 @@ export class DocEditorClient {
 
       this.poller = new Poller(this.app, {
         tool: "poll_editor_commands",
-        arguments: {sessionId: this.sessionId!},
+        arguments: { sessionId: this.sessionId },
         onResult: (result) => {
-          const { commands } = result.structuredContent as { commands: Command[] };
+          const { commands } = result.structuredContent as {
+            commands: Command[];
+          };
           this.enqueueCommands(commands);
         },
         onError: (error) => {
@@ -221,7 +279,9 @@ export class DocEditorClient {
     }
   };
 
-  private readonly onRequestSaveAs = async (event: { data: { url: string } }) => {
+  private readonly onRequestSaveAs = async (event: {
+    data: { url: string };
+  }) => {
     this.app.openLink({
       url: event.data.url,
     });

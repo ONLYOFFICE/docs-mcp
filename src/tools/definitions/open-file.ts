@@ -1,15 +1,20 @@
-import {
-  registerAppTool,
-} from "@modelcontextprotocol/ext-apps/server";
+import { registerAppTool } from "@modelcontextprotocol/ext-apps/server";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { CONFIG } from "../../config.js";
 import { getTransportMode, type TransportMode } from "../../runtime.js";
 import { EDITOR_APP_RESOURCE_URI } from "../../resources/definitions/editor.js";
 import type { McpTool } from "../index.js";
-import { formatDocumentFileUrlAccessError, validateAllowedDocumentFileUrl } from "../../domain/document-file-url-access.js";
+import {
+  formatDocumentFileUrlAccessError,
+  validateAllowedDocumentFileUrl,
+} from "../../domain/document-file-url-access.js";
 import { createEditorConfig } from "../../domain/document-server/editor-config.js";
-import { getDocumentType, getExtension, getFileNameFromUrl } from "../../domain/document-server/file-utils.js";
+import {
+  getDocumentType,
+  getExtension,
+  getFileNameFromUrl,
+} from "../../domain/document-server/file-utils.js";
 import { formatsProvider } from "../../domain/document-server/formats-provider.js";
 import {
   formatLocalFileAccessError,
@@ -17,11 +22,15 @@ import {
   type LocalFileAccessResult,
 } from "../../domain/local-file-access.js";
 
-const OpenAIFileSchema = z.object({
-  download_url: z.url().describe("Direct download URL of the file to open."),
-  file_id: z.string().describe("Unique identifier of the file."),
-  file_name: z.string().describe("File name including extension (e.g. report.docx)."),
-}).optional();
+const OpenAIFileSchema = z
+  .object({
+    download_url: z.url().describe("Direct download URL of the file to open."),
+    file_id: z.string().describe("Unique identifier of the file."),
+    file_name: z
+      .string()
+      .describe("File name including extension (e.g. report.docx)."),
+  })
+  .optional();
 
 type OpenAIFile = z.infer<typeof OpenAIFileSchema>;
 
@@ -46,17 +55,20 @@ type OpenFileDeps = {
 
 export function createOpenFileHandler(deps: OpenFileDeps = {}) {
   const buildEditorConfig = deps.createEditorConfig ?? createEditorConfig;
-  const documentServerBaseUrl = deps.documentServerBaseUrl ?? CONFIG.DOCUMENT_SERVER_BASE_URL;
+  const documentServerBaseUrl =
+    deps.documentServerBaseUrl ?? CONFIG.DOCUMENT_SERVER_BASE_URL;
   const documentTypeForExtension = deps.getDocumentType ?? getDocumentType;
   const getMode = deps.getTransportMode ?? getTransportMode;
   const randomUUID = deps.randomUUID ?? crypto.randomUUID.bind(crypto);
-  const resolveLocalFile = deps.resolveAllowedLocalFile ?? resolveAllowedLocalFile;
+  const resolveLocalFile =
+    deps.resolveAllowedLocalFile ?? resolveAllowedLocalFile;
   const supportedFormatsProvider = deps.formatsProvider ?? formatsProvider;
-  const validateDocumentFileUrl = deps.validateAllowedDocumentFileUrl ?? validateAllowedDocumentFileUrl;
+  const validateDocumentFileUrl =
+    deps.validateAllowedDocumentFileUrl ?? validateAllowedDocumentFileUrl;
 
   return async ({ mode, fileUrl, openai_file }: OpenFileInput) => {
-    let fileName = undefined;
-    let downloadUrl = undefined;
+    let fileName: string;
+    let downloadUrl: string;
     let isLocalFile = false;
 
     if (fileUrl) {
@@ -67,10 +79,10 @@ export function createOpenFileHandler(deps: OpenFileDeps = {}) {
           content: [
             {
               type: "text" as const,
-              text: "Local file:// URLs are only supported with stdio transport."
-            }
+              text: "Local file:// URLs are only supported with stdio transport.",
+            },
           ],
-           isError: true,
+          isError: true,
         };
       }
 
@@ -82,8 +94,8 @@ export function createOpenFileHandler(deps: OpenFileDeps = {}) {
             content: [
               {
                 type: "text" as const,
-                text: formatLocalFileAccessError(fileUrl, resolved.reason)
-              }
+                text: formatLocalFileAccessError(fileUrl, resolved.reason),
+              },
             ],
             isError: true,
           };
@@ -97,8 +109,8 @@ export function createOpenFileHandler(deps: OpenFileDeps = {}) {
             content: [
               {
                 type: "text" as const,
-                text: formatDocumentFileUrlAccessError(fileUrl, validated)
-              }
+                text: formatDocumentFileUrlAccessError(fileUrl, validated),
+              },
             ],
             isError: true,
           };
@@ -114,8 +126,11 @@ export function createOpenFileHandler(deps: OpenFileDeps = {}) {
           content: [
             {
               type: "text" as const,
-              text: formatDocumentFileUrlAccessError(openai_file.download_url, validated)
-            }
+              text: formatDocumentFileUrlAccessError(
+                openai_file.download_url,
+                validated,
+              ),
+            },
           ],
           isError: true,
         };
@@ -128,8 +143,8 @@ export function createOpenFileHandler(deps: OpenFileDeps = {}) {
         content: [
           {
             type: "text" as const,
-            text: "No file specified. Please provide a fileUrl parameter or openai_file."
-          }
+            text: "No file specified. Please provide a fileUrl parameter or openai_file.",
+          },
         ],
         isError: true,
       };
@@ -141,7 +156,8 @@ export function createOpenFileHandler(deps: OpenFileDeps = {}) {
     const documentType = await documentTypeForExtension(extension);
 
     if (!documentType) {
-      const supportedExtensions = await supportedFormatsProvider.getListViewableExtensions();
+      const supportedExtensions =
+        await supportedFormatsProvider.getListViewableExtensions();
 
       return {
         content: [
@@ -180,18 +196,29 @@ export const openFile: McpTool = {
       "open_file",
       {
         title: "Open File",
-        description: "Open an existing file in the ONLYOFFICE Editor. Returns a sessionId required by list_editor_tools, call_editor_tool, and save_file.",
+        description:
+          "Open an existing file in the ONLYOFFICE Editor. Returns a sessionId required by list_editor_tools, call_editor_tool, and save_file.",
         inputSchema: {
-          fileUrl: z.url().optional().describe("Direct download URL of the file to open."),
-          openai_file: OpenAIFileSchema.describe("File object returned by OpenAI file upload API. If provided, the file will be downloaded from the download_url."),
-          mode: z.enum(["edit", "view"]).default("edit").describe("Editor mode: 'edit' to allow editing, 'view' for read-only."),
+          fileUrl: z
+            .url()
+            .optional()
+            .describe("Direct download URL of the file to open."),
+          openai_file: OpenAIFileSchema.describe(
+            "File object returned by OpenAI file upload API. If provided, the file will be downloaded from the download_url.",
+          ),
+          mode: z
+            .enum(["edit", "view"])
+            .default("edit")
+            .describe(
+              "Editor mode: 'edit' to allow editing, 'view' for read-only.",
+            ),
         },
         _meta: {
           ui: { resourceUri: EDITOR_APP_RESOURCE_URI },
           "openai/fileParams": ["openai_file"],
         },
       },
-      createOpenFileHandler()
+      createOpenFileHandler(),
     );
   },
 };

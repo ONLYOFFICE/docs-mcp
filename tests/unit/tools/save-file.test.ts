@@ -5,7 +5,8 @@ process.env.DOCUMENT_SERVER_JWT_SECRET = "test-secret";
 
 describe("save-file", () => {
   test("enqueues a saveFile command and returns download guidance", async () => {
-    const { createSaveFileHandler } = await import("../../../src/tools/definitions/save-file.ts");
+    const { createSaveFileHandler } =
+      await import("../../../src/tools/definitions/save-file.ts");
     const calls: unknown[] = [];
     const handler = createSaveFileHandler({
       randomUUID: () => "command-1",
@@ -37,7 +38,8 @@ describe("save-file", () => {
   });
 
   test("propagates queue errors", async () => {
-    const { createSaveFileHandler } = await import("../../../src/tools/definitions/save-file.ts");
+    const { createSaveFileHandler } =
+      await import("../../../src/tools/definitions/save-file.ts");
     const error = new Error("queue failed");
     const handler = createSaveFileHandler({
       commandQueue: {
@@ -51,7 +53,8 @@ describe("save-file", () => {
   });
 
   test("registers the MCP tool definition", async () => {
-    const { saveFile } = await import("../../../src/tools/definitions/save-file.ts");
+    const { saveFile } =
+      await import("../../../src/tools/definitions/save-file.ts");
     const registrations: unknown[] = [];
     const server = {
       registerTool: (...args: unknown[]) => {

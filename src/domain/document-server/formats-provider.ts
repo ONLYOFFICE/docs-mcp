@@ -42,18 +42,20 @@ export class FormatsProvider {
     }
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch formats from Document Server: ${response.status} ${response.statusText}`
+        `Failed to fetch formats from Document Server: ${response.status} ${response.statusText}`,
       );
     }
 
     const data: DocFormat[] = (await response.json()) as DocFormat[];
 
     this.cache = { data, fetchedAt: now };
-    
+
     return data;
   }
 
-  async getDocFormatByExtension(extension: string): Promise<DocFormat | undefined> {
+  async getDocFormatByExtension(
+    extension: string,
+  ): Promise<DocFormat | undefined> {
     const formats = await this.getDocFormats();
 
     return formats.find((f) => extension === f.name);
@@ -62,9 +64,7 @@ export class FormatsProvider {
   async getListViewableExtensions(): Promise<string[]> {
     const formats = await this.getDocFormats();
 
-    return formats
-      .filter((f) => f.type)
-      .map((f) => f.name);
+    return formats.filter((f) => f.type).map((f) => f.name);
   }
 }
 

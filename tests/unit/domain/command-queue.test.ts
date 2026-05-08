@@ -1,17 +1,28 @@
 import { describe, expect, jest, test } from "bun:test";
-import { CommandQueue, CommandTimeoutError } from "../../../src/domain/editor-session/command-queue.ts";
+import {
+  CommandQueue,
+  CommandTimeoutError,
+} from "../../../src/domain/editor-session/command-queue.ts";
 
 describe("CommandQueue", () => {
   test("poll returns each queued command only once", () => {
     const queue = new CommandQueue();
     const result = queue.enqueue(
       "session-1",
-      { id: "command-1", type: "aiListTools", payload: { documentType: "word" } },
+      {
+        id: "command-1",
+        type: "aiListTools",
+        payload: { documentType: "word" },
+      },
       1_000,
     );
 
     expect(queue.poll("session-1")).toEqual([
-      { id: "command-1", type: "aiListTools", payload: { documentType: "word" } },
+      {
+        id: "command-1",
+        type: "aiListTools",
+        payload: { documentType: "word" },
+      },
     ]);
     expect(queue.poll("session-1")).toEqual([]);
 
@@ -21,11 +32,23 @@ describe("CommandQueue", () => {
 
   test("keeps sessions isolated", () => {
     const queue = new CommandQueue();
-    const first = queue.enqueue("session-1", { id: "command-1", type: "saveFile" }, 1_000);
-    const second = queue.enqueue("session-2", { id: "command-2", type: "aiCallTool" }, 1_000);
+    const first = queue.enqueue(
+      "session-1",
+      { id: "command-1", type: "saveFile" },
+      1_000,
+    );
+    const second = queue.enqueue(
+      "session-2",
+      { id: "command-2", type: "aiCallTool" },
+      1_000,
+    );
 
-    expect(queue.poll("session-1")).toEqual([{ id: "command-1", type: "saveFile" }]);
-    expect(queue.poll("session-2")).toEqual([{ id: "command-2", type: "aiCallTool" }]);
+    expect(queue.poll("session-1")).toEqual([
+      { id: "command-1", type: "saveFile" },
+    ]);
+    expect(queue.poll("session-2")).toEqual([
+      { id: "command-2", type: "aiCallTool" },
+    ]);
 
     expect(queue.resolve("session-1", "command-1", "first-result")).toBe(true);
     expect(queue.resolve("session-2", "command-2", "second-result")).toBe(true);
@@ -36,12 +59,18 @@ describe("CommandQueue", () => {
   test("resolve returns false for an unknown command", () => {
     const queue = new CommandQueue();
 
-    expect(queue.resolve("missing-session", "missing-command", null)).toBe(false);
+    expect(queue.resolve("missing-session", "missing-command", null)).toBe(
+      false,
+    );
   });
 
   test("rejects queued command after timeout", async () => {
     const queue = new CommandQueue();
-    const result = queue.enqueue("session-1", { id: "command-1", type: "saveFile" }, 1);
+    const result = queue.enqueue(
+      "session-1",
+      { id: "command-1", type: "saveFile" },
+      1,
+    );
 
     await expect(result).rejects.toBeInstanceOf(CommandTimeoutError);
     expect(queue.resolve("session-1", "command-1", null)).toBe(false);
@@ -49,7 +78,11 @@ describe("CommandQueue", () => {
 
   test("longPoll returns commands already in the queue", async () => {
     const queue = new CommandQueue();
-    const enqueuePromise = queue.enqueue("session-1", { id: "command-1", type: "saveFile" }, 5_000);
+    const enqueuePromise = queue.enqueue(
+      "session-1",
+      { id: "command-1", type: "saveFile" },
+      5_000,
+    );
 
     const commands = await queue.longPoll("session-1");
 
@@ -62,7 +95,11 @@ describe("CommandQueue", () => {
     const queue = new CommandQueue();
     const pollPromise = queue.longPoll("session-1");
 
-    const enqueuePromise = queue.enqueue("session-1", { id: "command-1", type: "aiListTools" }, 5_000);
+    const enqueuePromise = queue.enqueue(
+      "session-1",
+      { id: "command-1", type: "aiListTools" },
+      5_000,
+    );
 
     const commands = await pollPromise;
     expect(commands).toEqual([{ id: "command-1", type: "aiListTools" }]);
@@ -79,7 +116,11 @@ describe("CommandQueue", () => {
 
     await expect(poll1).resolves.toEqual([]);
 
-    const enqueuePromise = queue.enqueue("session-1", { id: "command-1", type: "saveFile" }, 5_000);
+    const enqueuePromise = queue.enqueue(
+      "session-1",
+      { id: "command-1", type: "saveFile" },
+      5_000,
+    );
     const commands = await poll2;
     expect(commands).toEqual([{ id: "command-1", type: "saveFile" }]);
 

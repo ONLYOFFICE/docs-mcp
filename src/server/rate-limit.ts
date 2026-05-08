@@ -26,7 +26,9 @@ function sendRateLimitError(res: Response, message: string): void {
   });
 }
 
-export function createHttpRateLimitMiddleware(options: HttpRateLimitOptions): RequestHandler {
+export function createHttpRateLimitMiddleware(
+  options: HttpRateLimitOptions,
+): RequestHandler {
   return rateLimit({
     windowMs: options.windowMs,
     limit: options.maxRequests,
@@ -43,7 +45,9 @@ export function createHttpRateLimitMiddleware(options: HttpRateLimitOptions): Re
   });
 }
 
-export function createInFlightLimitMiddleware(options: InFlightLimitOptions): RequestHandler {
+export function createInFlightLimitMiddleware(
+  options: InFlightLimitOptions,
+): RequestHandler {
   const clients = new Map<string, ClientState>();
 
   return (req, res, next) => {

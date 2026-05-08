@@ -5,10 +5,13 @@ process.env.DOCUMENT_SERVER_JWT_SECRET = "test-secret";
 
 describe("set-editor-command-result", () => {
   test("resolves a known command result", async () => {
-    const { createSetEditorCommandResultHandler } = await import(
-      "../../../src/tools/definitions/set-editor-command-result.ts"
-    );
-    const calls: Array<{ sessionId: string; commandId: string; data: unknown }> = [];
+    const { createSetEditorCommandResultHandler } =
+      await import("../../../src/tools/definitions/set-editor-command-result.ts");
+    const calls: Array<{
+      sessionId: string;
+      commandId: string;
+      data: unknown;
+    }> = [];
     const handler = createSetEditorCommandResultHandler({
       commandQueue: {
         resolve(sessionId, commandId, data) {
@@ -35,9 +38,8 @@ describe("set-editor-command-result", () => {
   });
 
   test("reports unknown command IDs", async () => {
-    const { createSetEditorCommandResultHandler } = await import(
-      "../../../src/tools/definitions/set-editor-command-result.ts"
-    );
+    const { createSetEditorCommandResultHandler } =
+      await import("../../../src/tools/definitions/set-editor-command-result.ts");
     const handler = createSetEditorCommandResultHandler({
       commandQueue: {
         resolve() {
@@ -47,14 +49,19 @@ describe("set-editor-command-result", () => {
     });
 
     await expect(
-      handler({ sessionId: "session-1", commandId: "missing-command", result: null }),
-    ).resolves.toEqual({ content: [{ type: "text", text: "unknown commandId" }] });
+      handler({
+        sessionId: "session-1",
+        commandId: "missing-command",
+        result: null,
+      }),
+    ).resolves.toEqual({
+      content: [{ type: "text", text: "unknown commandId" }],
+    });
   });
 
   test("registers the MCP tool definition", async () => {
-    const { setEditorCommandResult } = await import(
-      "../../../src/tools/definitions/set-editor-command-result.ts"
-    );
+    const { setEditorCommandResult } =
+      await import("../../../src/tools/definitions/set-editor-command-result.ts");
     const registrations: unknown[] = [];
     const server = {
       registerTool: (...args: unknown[]) => {

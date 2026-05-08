@@ -5,9 +5,8 @@ process.env.DOCUMENT_SERVER_JWT_SECRET = "test-secret";
 
 describe("call-editor-tool", () => {
   test("enqueues an aiCallTool command and returns the editor result", async () => {
-    const { createCallEditorToolHandler } = await import(
-      "../../../src/tools/definitions/call-editor-tool.ts"
-    );
+    const { createCallEditorToolHandler } =
+      await import("../../../src/tools/definitions/call-editor-tool.ts");
     const calls: unknown[] = [];
     const handler = createCallEditorToolHandler({
       randomUUID: () => "command-1",
@@ -43,9 +42,8 @@ describe("call-editor-tool", () => {
   });
 
   test("passes through an omitted input object as undefined args", async () => {
-    const { createCallEditorToolHandler } = await import(
-      "../../../src/tools/definitions/call-editor-tool.ts"
-    );
+    const { createCallEditorToolHandler } =
+      await import("../../../src/tools/definitions/call-editor-tool.ts");
     const calls: unknown[] = [];
     const handler = createCallEditorToolHandler({
       randomUUID: () => "command-1",
@@ -73,12 +71,10 @@ describe("call-editor-tool", () => {
   });
 
   test("returns timeout text when the editor does not respond", async () => {
-    const { CommandTimeoutError } = await import(
-      "../../../src/domain/editor-session/command-queue.ts"
-    );
-    const { createCallEditorToolHandler } = await import(
-      "../../../src/tools/definitions/call-editor-tool.ts"
-    );
+    const { CommandTimeoutError } =
+      await import("../../../src/domain/editor-session/command-queue.ts");
+    const { createCallEditorToolHandler } =
+      await import("../../../src/tools/definitions/call-editor-tool.ts");
     const handler = createCallEditorToolHandler({
       commandQueue: {
         async enqueue() {
@@ -88,7 +84,11 @@ describe("call-editor-tool", () => {
     });
 
     await expect(
-      handler({ sessionId: "session-1", tool: "insertText", input: { text: "Hello" } }),
+      handler({
+        sessionId: "session-1",
+        tool: "insertText",
+        input: { text: "Hello" },
+      }),
     ).resolves.toEqual({
       content: [{ type: "text", text: "Timeout: no response from editor" }],
       isError: true,
@@ -96,7 +96,8 @@ describe("call-editor-tool", () => {
   });
 
   test("registers the MCP tool definition", async () => {
-    const { callEditorTool } = await import("../../../src/tools/definitions/call-editor-tool.ts");
+    const { callEditorTool } =
+      await import("../../../src/tools/definitions/call-editor-tool.ts");
     const registrations: unknown[] = [];
     const server = {
       registerTool: (...args: unknown[]) => {

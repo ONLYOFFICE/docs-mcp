@@ -19,7 +19,8 @@ const disabledConfig = {
 
 describe("list-editor-tools", () => {
   test("filters tools by document type configuration", async () => {
-    const { filterTools } = await import("../../../src/tools/definitions/list-editor-tools.ts");
+    const { filterTools } =
+      await import("../../../src/tools/definitions/list-editor-tools.ts");
     const tools = [
       { name: "insertText" },
       { name: "writeMacro" },
@@ -38,14 +39,17 @@ describe("list-editor-tools", () => {
       { name: "formatTable" },
       { name: "addChart" },
     ]);
-    expect(filterTools(tools, "slide", enabledConfig, disabledConfig)).toEqual([]);
-    expect(filterTools(tools, "unknown", enabledConfig, disabledConfig)).toEqual([]);
+    expect(filterTools(tools, "slide", enabledConfig, disabledConfig)).toEqual(
+      [],
+    );
+    expect(
+      filterTools(tools, "unknown", enabledConfig, disabledConfig),
+    ).toEqual([]);
   });
 
   test("enqueues an aiListTools command and returns filtered tools", async () => {
-    const { createListEditorToolsHandler } = await import(
-      "../../../src/tools/definitions/list-editor-tools.ts"
-    );
+    const { createListEditorToolsHandler } =
+      await import("../../../src/tools/definitions/list-editor-tools.ts");
     const calls: unknown[] = [];
     const handler = createListEditorToolsHandler({
       randomUUID: () => "command-1",
@@ -56,7 +60,11 @@ describe("list-editor-tools", () => {
           calls.push({ sessionId, command, timeoutMs });
           return {
             documentType: "cell",
-            tools: [{ name: "formatTable" }, { name: "writeMacro" }, { name: "addChart" }],
+            tools: [
+              { name: "formatTable" },
+              { name: "writeMacro" },
+              { name: "addChart" },
+            ],
           };
         },
       },
@@ -73,17 +81,17 @@ describe("list-editor-tools", () => {
     ]);
     expect(result).toEqual({
       content: [],
-      structuredContent: { tools: [{ name: "formatTable" }, { name: "addChart" }] },
+      structuredContent: {
+        tools: [{ name: "formatTable" }, { name: "addChart" }],
+      },
     });
   });
 
   test("returns timeout text when the editor does not respond", async () => {
-    const { CommandTimeoutError } = await import(
-      "../../../src/domain/editor-session/command-queue.ts"
-    );
-    const { createListEditorToolsHandler } = await import(
-      "../../../src/tools/definitions/list-editor-tools.ts"
-    );
+    const { CommandTimeoutError } =
+      await import("../../../src/domain/editor-session/command-queue.ts");
+    const { createListEditorToolsHandler } =
+      await import("../../../src/tools/definitions/list-editor-tools.ts");
     const handler = createListEditorToolsHandler({
       commandQueue: {
         async enqueue() {
@@ -99,7 +107,8 @@ describe("list-editor-tools", () => {
   });
 
   test("registers the MCP tool definition", async () => {
-    const { listEditorTools } = await import("../../../src/tools/definitions/list-editor-tools.ts");
+    const { listEditorTools } =
+      await import("../../../src/tools/definitions/list-editor-tools.ts");
     const registrations: unknown[] = [];
     const server = {
       registerTool: (...args: unknown[]) => {
