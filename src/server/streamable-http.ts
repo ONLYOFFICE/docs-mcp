@@ -22,27 +22,21 @@ type HealthCheckResult = {
   timestamp: string;
 };
 
-function normalizeOrigin(origin: string): string {
-  return new URL(origin).origin;
-}
-
 function createCorsOptions(): CorsOptions {
-  const allowAllOrigins = CONFIG.HTTP_CORS_ALLOWED_ORIGINS.includes("*");
-  const allowedOrigins = new Set(
-    CONFIG.HTTP_CORS_ALLOWED_ORIGINS.filter((origin) => origin !== "*").map(
-      (origin) => normalizeOrigin(origin),
-    ),
-  );
+  if (CONFIG.HTTP_CORS_ALLOWED_ORIGINS.length === 0) {
+    return {
+      origin: false,
+    };
+  }
+
+  if (CONFIG.HTTP_CORS_ALLOWED_ORIGINS.includes("*")) {
+    return {
+      origin: "*",
+    };
+  }
 
   return {
-    origin(origin, callback) {
-      if (!origin || allowAllOrigins || allowedOrigins.has(origin)) {
-        callback(null, true);
-        return;
-      }
-
-      callback(new Error(`CORS origin is not allowed: ${origin}`));
-    },
+    origin: [...new Set(CONFIG.HTTP_CORS_ALLOWED_ORIGINS)],
   };
 }
 
