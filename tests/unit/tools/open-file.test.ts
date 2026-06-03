@@ -32,7 +32,7 @@ describe("open-file", () => {
       createEditorConfig: async (params) => {
         configCalls.push(params);
         return {
-          document: { title: params.fileName },
+          document: { key: params.sessionId, title: params.fileName },
           editorConfig: { mode: params.mode },
         };
       },
@@ -58,8 +58,9 @@ describe("open-file", () => {
       structuredContent: {
         sessionId: "session-1",
         documentServerBaseUrl: "https://document-server.example",
+        shardkey: "session-1",
         config: {
-          document: { title: "Quarterly Report.docx" },
+          document: { key: "session-1", title: "Quarterly Report.docx" },
           editorConfig: { mode: "view" },
         },
       },
@@ -104,7 +105,10 @@ describe("open-file", () => {
       getDocumentType: async () => "cell",
       createEditorConfig: async (params) => {
         configCalls.push(params);
-        return { documentType: "cell", document: { title: params.fileName } };
+        return {
+          documentType: "cell",
+          document: { key: params.sessionId, title: params.fileName },
+        };
       },
     });
 
@@ -130,7 +134,11 @@ describe("open-file", () => {
       structuredContent: {
         sessionId: "session-1",
         documentServerBaseUrl: "https://document-server.example",
-        config: { documentType: "cell", document: { title: "Budget.xlsx" } },
+        shardkey: "session-1",
+        config: {
+          documentType: "cell",
+          document: { key: "session-1", title: "Budget.xlsx" },
+        },
       },
     });
   });
@@ -230,7 +238,7 @@ describe("open-file", () => {
       getDocumentType: async () => "word",
       createEditorConfig: async (params) => {
         configCalls.push(params);
-        return { document: { url: params.fileUrl } };
+        return { document: { key: params.sessionId, url: params.fileUrl } };
       },
     });
 
@@ -252,7 +260,8 @@ describe("open-file", () => {
       structuredContent: {
         sessionId: "session-1",
         documentServerBaseUrl: "https://document-server.example",
-        config: { document: { url: "_data_" } },
+        shardkey: "session-1",
+        config: { document: { key: "session-1", url: "_data_" } },
         fileUrl: "file:///C:/tmp/Report.docx",
       },
     });

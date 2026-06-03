@@ -31,7 +31,7 @@ describe("create-file", () => {
       createEditorConfig: async (params) => {
         calls.push(params);
         return {
-          document: { title: params.fileName },
+          document: { key: params.sessionId, title: params.fileName },
           editorConfig: { mode: params.mode },
         };
       },
@@ -44,8 +44,9 @@ describe("create-file", () => {
       structuredContent: {
         sessionId: "session-1",
         documentServerBaseUrl: "https://document-server.example",
+        shardkey: "session-1",
         config: {
-          document: { title: "Document.docx" },
+          document: { key: "session-1", title: "Document.docx" },
           editorConfig: { mode: "edit" },
         },
         fileUrl: "blank://en/docx",
@@ -55,7 +56,8 @@ describe("create-file", () => {
       handler({ fileName: "Sheet", fileType: "xlsx", locale: "de" }),
     ).resolves.toMatchObject({
       structuredContent: {
-        config: { document: { title: "Sheet.xlsx" } },
+        shardkey: "session-1",
+        config: { document: { key: "session-1", title: "Sheet.xlsx" } },
         fileUrl: "blank://de/xlsx",
       },
     });
@@ -63,7 +65,8 @@ describe("create-file", () => {
       handler({ fileName: "Deck", fileType: "pptx", locale: "fr" }),
     ).resolves.toMatchObject({
       structuredContent: {
-        config: { document: { title: "Deck.pptx" } },
+        shardkey: "session-1",
+        config: { document: { key: "session-1", title: "Deck.pptx" } },
         fileUrl: "blank://fr/pptx",
       },
     });
@@ -95,13 +98,14 @@ describe("create-file", () => {
     const handler = createCreateFileHandler({
       randomUUID: () => "session-1",
       documentServerBaseUrl: "https://document-server.example",
-      createEditorConfig: async () => ({ ok: true }),
+      createEditorConfig: async () => ({ document: { key: "session-1" } }),
     });
 
     await expect(
       handler({ fileName: "Document", fileType: "docx" }),
     ).resolves.toMatchObject({
       structuredContent: {
+        shardkey: "session-1",
         fileUrl: "blank://default/docx",
       },
     });
