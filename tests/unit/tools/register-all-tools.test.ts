@@ -18,8 +18,6 @@ describe("registerAllTools", () => {
     expect(registrations.map(([name]) => name)).toEqual([
       "create_file",
       "open_file",
-      "list_editor_tools",
-      "call_editor_tool",
       "save_file",
       "poll_editor_commands",
       "set_editor_command_result",

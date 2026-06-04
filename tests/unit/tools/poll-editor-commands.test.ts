@@ -11,8 +11,7 @@ describe("poll-editor-commands", () => {
     const commands: Command[] = [
       {
         id: "command-1",
-        type: "aiListTools",
-        payload: { documentType: "word" },
+        type: "saveFile",
       },
     ];
     const calls: string[] = [];

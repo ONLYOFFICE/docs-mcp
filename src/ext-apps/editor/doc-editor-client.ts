@@ -9,22 +9,7 @@ declare const DocsAPI: {
   DocEditor: new (id: string, config: object) => DocEditor;
 };
 
-interface Connector {
-  callCommand(command: () => void, callback?: () => void): void;
-  executeMethod(
-    method: string,
-    params: object[],
-    callback: (data: unknown) => void,
-  ): void;
-  attachEvent(
-    event: string,
-    handler: (object: undefined | object) => void,
-  ): void;
-  sendEvent(event: string, params: object): void;
-}
-
 interface DocEditor {
-  createConnector(): Connector;
   denyEditingRights(): void;
   downloadAs(): void;
   openDocument(data: Uint8Array): void;
@@ -52,8 +37,6 @@ const log = {
 
 export class DocEditorClient {
   private docEditor: DocEditor | null = null;
-  private documentType: string | null = null;
-  private connector: Connector | null = null;
   private poller: Poller | null = null;
   private pendingToolCommandId: string | null = null;
   private commandQueue: Command[] = [];
@@ -91,7 +74,6 @@ export class DocEditorClient {
     };
 
     this.docEditor = new DocsAPI.DocEditor(this.containerId, config);
-    this.documentType = config.documentType ?? null;
   }
 
   private loadScript(src: string): Promise<void> {
@@ -118,8 +100,6 @@ export class DocEditorClient {
 
     this.pendingToolCommandId = command.id;
     const handlers: Record<CommandType, () => void> = {
-      aiListTools: () => this.aiListTools(command),
-      aiCallTool: () => this.aiCallTool(command),
       saveFile: () => this.saveFile(command),
     };
 
@@ -137,48 +117,6 @@ export class DocEditorClient {
         (err) => log.error("set_editor_command_result failed:", err),
       )
       .finally(() => this.processNext());
-  }
-
-  private aiListTools(command: Command): void {
-    if (!this.connector) {
-      void this.completeCommand(command.id, {
-        error: "Editor connector is not available.",
-      });
-      return;
-    }
-
-    this.connector.executeMethod("AI", [{ type: "Tools" }], (data) => {
-      const tools: { name: string; description: string }[] = Array.isArray(data)
-        ? data
-        : ((data as { Tools?: { name: string; description: string }[] })
-            ?.Tools ?? []);
-
-      void this.completeCommand(command.id, {
-        documentType: this.documentType,
-        tools,
-      });
-    });
-  }
-
-  private aiCallTool(command: Command): void {
-    if (!this.connector) {
-      void this.completeCommand(command.id, {
-        error: "Editor connector is not available.",
-      });
-      return;
-    }
-
-    const { name, args } = command.payload as { name: string; args: object };
-    try {
-      this.connector.sendEvent("ai_onCallTool", { name, arguments: args });
-    } catch (error) {
-      void this.completeCommand(command.id, {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to call editor tool.",
-      });
-    }
   }
 
   private saveFile(command: Command): void {
@@ -251,17 +189,7 @@ export class DocEditorClient {
   private readonly onDocumentReady = (startPolling: boolean) => {
     log.info("Document is ready (onDocumentReady)");
 
-    this.connector = this.docEditor?.createConnector() ?? null;
-
     if (startPolling) {
-      this.connector?.attachEvent("ai_onCallToolResult", (result) => {
-        const commandId = this.pendingToolCommandId;
-
-        if (!commandId) return;
-
-        void this.completeCommand(commandId, result);
-      });
-
       this.poller = new Poller(this.app, {
         tool: "poll_editor_commands",
         arguments: { sessionId: this.sessionId },

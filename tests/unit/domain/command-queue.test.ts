@@ -11,8 +11,7 @@ describe("CommandQueue", () => {
       "session-1",
       {
         id: "command-1",
-        type: "aiListTools",
-        payload: { documentType: "word" },
+        type: "saveFile",
       },
       1_000,
     );
@@ -20,8 +19,7 @@ describe("CommandQueue", () => {
     expect(queue.poll("session-1")).toEqual([
       {
         id: "command-1",
-        type: "aiListTools",
-        payload: { documentType: "word" },
+        type: "saveFile",
       },
     ]);
     expect(queue.poll("session-1")).toEqual([]);
@@ -39,7 +37,7 @@ describe("CommandQueue", () => {
     );
     const second = queue.enqueue(
       "session-2",
-      { id: "command-2", type: "aiCallTool" },
+      { id: "command-2", type: "saveFile" },
       1_000,
     );
 
@@ -47,7 +45,7 @@ describe("CommandQueue", () => {
       { id: "command-1", type: "saveFile" },
     ]);
     expect(queue.poll("session-2")).toEqual([
-      { id: "command-2", type: "aiCallTool" },
+      { id: "command-2", type: "saveFile" },
     ]);
 
     expect(queue.resolve("session-1", "command-1", "first-result")).toBe(true);
@@ -97,12 +95,12 @@ describe("CommandQueue", () => {
 
     const enqueuePromise = queue.enqueue(
       "session-1",
-      { id: "command-1", type: "aiListTools" },
+      { id: "command-1", type: "saveFile" },
       5_000,
     );
 
     const commands = await pollPromise;
-    expect(commands).toEqual([{ id: "command-1", type: "aiListTools" }]);
+    expect(commands).toEqual([{ id: "command-1", type: "saveFile" }]);
 
     queue.resolve("session-1", "command-1", { tools: [] });
     await enqueuePromise;
