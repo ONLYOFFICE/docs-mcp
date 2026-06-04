@@ -66,75 +66,15 @@ export function createOpenFileHandler(deps: OpenFileDeps = {}) {
     deps.validateAllowedDocumentFileUrl ?? validateAllowedDocumentFileUrl;
 
   return async ({ fileUrl, openai_file }: OpenFileInput) => {
+    const sessionId = randomUUID();
+
     let fileName: string;
     let downloadUrl: string;
-    let isLocalFile = false;
 
     if (fileUrl) {
-      isLocalFile = fileUrl.startsWith("file://");
-
-      if (isLocalFile && getMode() !== "stdio") {
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: "Local file:// URLs are only supported with stdio transport.",
-            },
-          ],
-          isError: true,
-        };
-      }
-
-      if (isLocalFile) {
-        const resolved = await resolveLocalFile(fileUrl);
-
-        if (!resolved.ok) {
-          return {
-            content: [
-              {
-                type: "text" as const,
-                text: formatLocalFileAccessError(fileUrl, resolved.reason),
-              },
-            ],
-            isError: true,
-          };
-        }
-      }
-
-      if (!isLocalFile) {
-        const validated = validateDocumentFileUrl(fileUrl);
-        if (!validated.ok) {
-          return {
-            content: [
-              {
-                type: "text" as const,
-                text: formatDocumentFileUrlAccessError(fileUrl, validated),
-              },
-            ],
-            isError: true,
-          };
-        }
-      }
-
       fileName = getFileNameFromUrl(fileUrl);
       downloadUrl = fileUrl;
     } else if (openai_file) {
-      const validated = validateDocumentFileUrl(openai_file.download_url);
-      if (!validated.ok) {
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: formatDocumentFileUrlAccessError(
-                openai_file.download_url,
-                validated,
-              ),
-            },
-          ],
-          isError: true,
-        };
-      }
-
       fileName = openai_file.file_name;
       downloadUrl = openai_file.download_url;
     } else {
@@ -149,7 +89,51 @@ export function createOpenFileHandler(deps: OpenFileDeps = {}) {
       };
     }
 
-    const sessionId = randomUUID();
+    const isLocalFile = downloadUrl.startsWith("file://");
+
+    if (isLocalFile && getMode() !== "stdio") {
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: "Local file:// URLs are only supported with stdio transport.",
+          },
+        ],
+        isError: true,
+      };
+    }
+
+    if (isLocalFile) {
+      const resolved = await resolveLocalFile(downloadUrl);
+
+      if (!resolved.ok) {
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: formatLocalFileAccessError(downloadUrl, resolved.reason),
+            },
+          ],
+          isError: true,
+        };
+      }
+    }
+
+    if (!isLocalFile) {
+      const validated = validateDocumentFileUrl(downloadUrl);
+
+      if (!validated.ok) {
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: formatDocumentFileUrlAccessError(downloadUrl, validated),
+            },
+          ],
+          isError: true,
+        };
+      }
+    }
 
     const extension = getExtension(fileName);
     const documentType = await documentTypeForExtension(extension);
