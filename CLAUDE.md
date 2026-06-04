@@ -57,7 +57,7 @@ The UI is a single-file HTML bundle inlined into the MCP resource at runtime by 
 Tools are split into two visibility planes:
 
 **AI-facing tools** (called by the LLM):
-- `create_file` / `open_file` — create or open a document; return `{ sessionId, documentServerBaseUrl, config }`. Use `registerAppTool` from `@modelcontextprotocol/ext-apps/server`, which causes the MCP host to render the editor UI resource alongside the tool response.
+- `open_file` — open a document; returns `{ sessionId, documentServerBaseUrl, config }`. Uses `registerAppTool` from `@modelcontextprotocol/ext-apps/server`, which causes the MCP host to render the editor UI resource alongside the tool response.
 - `save_file` — triggers `downloadAs()` in the browser.
 
 **App-only tools** (`_meta: { visibility: ["app"] }`, called only by the embedded editor UI):
@@ -72,7 +72,7 @@ Tools are split into two visibility planes:
 2. Browser's `Poller` (`src/ext-apps/editor/poller.ts`) continuously calls `poll_editor_commands` → `CommandQueue.longPoll()` blocks until a command arrives (up to 30 s), then returns the batch.
 3. Browser executes the command via the ONLYOFFICE editor API, then calls `set_editor_command_result` → `CommandQueue.resolve()` resolves the original promise.
 
-Each session is keyed by `sessionId` (a UUID generated at `open_file`/`create_file` time).
+Each session is keyed by `sessionId` (a UUID generated at `open_file` time).
 
 ### UI client (`src/ui/`)
 

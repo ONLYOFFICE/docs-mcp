@@ -86,21 +86,8 @@ describe("read-file-content", () => {
       content: [],
       structuredContent: {
         error:
-          "Invalid path format. Expected blank://{locale}/{fileType} or file:// URL, got: https://example.com/document.docx",
+          "Invalid path format. Expected file:// URL, got: https://example.com/document.docx",
       },
-    });
-  });
-
-  test("rejects malformed blank URLs", async () => {
-    const { createReadFileContentHandler } =
-      await import("../../../src/tools/definitions/read-file-content.ts");
-    const handler = createReadFileContentHandler();
-
-    await expect(
-      handler({ url: "blank://en", offset: 0, byteCount: 10 }),
-    ).resolves.toEqual({
-      content: [],
-      structuredContent: { error: "Invalid blank URL: blank://en" },
     });
   });
 

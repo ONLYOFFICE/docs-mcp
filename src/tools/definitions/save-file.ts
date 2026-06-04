@@ -54,9 +54,7 @@ export const saveFile: McpTool = {
           openWorldHint: false,
         },
         inputSchema: {
-          sessionId: z
-            .string()
-            .describe("Session ID returned by open_file or create_file."),
+          sessionId: z.string().describe("Session ID returned by open_file."),
         },
       },
       createSaveFileHandler(),
