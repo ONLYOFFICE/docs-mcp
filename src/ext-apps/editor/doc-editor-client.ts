@@ -22,6 +22,7 @@ export type EditorConfig = {
     lang?: string;
     mode?: string;
   };
+  type?: "desktop" | "mobile" | "embedded";
   events?: Record<string, unknown>;
 };
 

@@ -48,6 +48,7 @@ app.ontoolresult = async (result) => {
   const locale = hostContext?.locale || "en";
 
   content.config.editorConfig.lang = locale;
+  content.config.type = deviceType();
 
   const docEditorClient = new DocEditorClient(
     app,
@@ -170,4 +171,11 @@ const changeDisplayMode = (displayMode: string) => {
 
 const getDisplayModeButton = (): HTMLElement | null => {
   return document.getElementById("display-mode-button");
+};
+
+const deviceType = () => {
+  if (window.matchMedia("(pointer: coarse)").matches) {
+    return "mobile";
+  }
+  return "embedded";
 };
