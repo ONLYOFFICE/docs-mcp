@@ -165,8 +165,17 @@ const initDisplayModeButton = () => {
 
 const changeDisplayMode = (displayMode: string) => {
   const displayModeButton = getDisplayModeButton();
+  if (!displayModeButton) return;
 
-  displayModeButton?.setAttribute("data-mode", displayMode);
+  displayModeButton.setAttribute("data-mode", displayMode);
+
+  if (deviceType() === "mobile") {
+    if (displayMode === "fullscreen") {
+      displayModeButton.style.display = "none";
+    } else {
+      displayModeButton.style.display = "";
+    }
+  }
 };
 
 const getDisplayModeButton = (): HTMLElement | null => {

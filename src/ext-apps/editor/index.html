@@ -157,6 +157,13 @@
           box-shadow: 0 4px 12px var(--btn-shadow);
         }
 
+        @media (hover: none), (pointer: coarse) {
+          #display-mode-button.initialized {
+            opacity: 1;
+            pointer-events: auto;
+          }
+        }
+
         #display-mode-button svg {
           flex-shrink: 0;
           width: 18px;
