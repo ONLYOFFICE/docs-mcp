@@ -1,13 +1,14 @@
 # ONLYOFFICE Docs MCP Server
 
 The ONLYOFFICE Docs MCP Server connects AI tools to ONLYOFFICE Docs. It lets AI
-agents, assistants, and chatbots open, edit, and save office documents
+agents, assistants, and chatbots create, open, edit, and save office documents
 through natural language interactions.
 
 ### Use Cases
 
 - Document Editing: Open and modify text documents, spreadsheets, and
   presentations directly in the ONLYOFFICE editor.
+- File Creation: Create new DOCX, XLSX, and PPTX files from blank templates.
 - Editor Sessions: Open documents in an embedded ONLYOFFICE editor and save the
   current document state.
 - Local and Remote File Workflows: Open files from allowed URLs, uploaded files,
@@ -165,19 +166,21 @@ Local `file://` URLs are intentionally supported only over stdio transport.
 
 ## Tools
 
-The server exposes tools for opening, editing, and saving files. A
+The server exposes tools for creating, opening, editing, and saving files. A
 typical editing flow is:
 
-1. Open a file with `open_file`.
+1. Open or create a file with `open_file` or `create_file`.
 2. Make edits in the embedded ONLYOFFICE editor.
 3. Save the result with `save_file`.
 
 ### Server tools
 
-These tools are the main MCP interface for opening, editing, and saving files.
+These tools are the main MCP interface for creating, opening, editing, and
+saving files.
 
 | Tool | Purpose |
 | --- | --- |
+| `create_file` | Creates a blank DOCX, XLSX, or PPTX file and opens it for editing. |
 | `open_file` | Opens an existing file from a URL, uploaded file, or allowed local `file://` URL in stdio mode. |
 | `save_file` | Triggers download of the currently open document. |
 
@@ -190,7 +193,7 @@ directly.
 | --- | --- |
 | `poll_editor_commands` | Long-polls queued commands for an embedded app integration. |
 | `set_editor_command_result` | Reports command execution results from an embedded app integration back to the server. |
-| `read_file_content` | Streams allowed local files as base64 chunks. |
+| `read_file_content` | Streams blank templates or allowed local files as base64 chunks. |
 
 ## Configuration
 

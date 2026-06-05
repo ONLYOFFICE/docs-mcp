@@ -1,4 +1,6 @@
-import { open } from "fs/promises";
+import { open, stat } from "fs/promises";
+import { resolve, dirname } from "path";
+import { fileURLToPath } from "url";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { McpTool } from "../index.js";
@@ -10,6 +12,44 @@ import {
 } from "../../domain/local-file-access.js";
 
 export const MAX_CHUNK_BYTES = 512 * 1024;
+
+const TEMPLATES_DIR_PATH = import.meta.filename.endsWith(".ts")
+  ? fileURLToPath(
+      new URL("../../../assets/document-templates/", import.meta.url),
+    )
+  : resolve(dirname(process.argv[1]), "assets", "document-templates");
+
+/**
+ * Resolves a blank file path using a three-step locale fallback:
+ * 1. Full BCP47 tag:  assets/document-templates/{locale}/new.{ext}
+ * 2. Language only:   assets/document-templates/{language}/new.{ext}
+ * 3. Default:         assets/document-templates/default/new.{ext}
+ */
+async function resolveBlankFilePath(
+  locale: string,
+  fileType: string,
+): Promise<{ filePath: string; size: number } | null> {
+  const language = locale.split("-")[0];
+
+  const candidates = [locale];
+  if (language !== locale) candidates.push(language);
+  candidates.push("default");
+
+  for (const dir of candidates) {
+    const filePath = resolve(TEMPLATES_DIR_PATH, dir, `new.${fileType}`);
+
+    if (!filePath.startsWith(TEMPLATES_DIR_PATH)) continue;
+
+    try {
+      const { size } = await stat(filePath);
+      return { filePath, size };
+    } catch {
+      // not found — try next candidate
+    }
+  }
+
+  return null;
+}
 
 type ReadFileContentInput = {
   url: string;
@@ -30,6 +70,31 @@ export function createReadFileContentHandler(deps: ReadFileContentDeps = {}) {
   return async ({ url, offset, byteCount }: ReadFileContentInput) => {
     let filePath: string | undefined = undefined;
     let totalBytes: number = 0;
+
+    if (url.startsWith("blank://")) {
+      const parts = url.slice("blank://".length).split("/");
+      if (parts.length !== 2 || !parts[0] || !parts[1]) {
+        return {
+          content: [],
+          structuredContent: { error: `Invalid blank URL: ${url}` },
+        };
+      }
+
+      const [locale, fileType] = parts;
+      const resolved = await resolveBlankFilePath(locale, fileType);
+
+      if (!resolved) {
+        return {
+          content: [],
+          structuredContent: {
+            error: `Template not found for locale "${locale}", type "${fileType}".`,
+          },
+        };
+      }
+
+      filePath = resolved.filePath;
+      totalBytes = resolved.size;
+    }
 
     if (url.startsWith("file://")) {
       if (getMode() !== "stdio") {
@@ -58,7 +123,7 @@ export function createReadFileContentHandler(deps: ReadFileContentDeps = {}) {
       return {
         content: [],
         structuredContent: {
-          error: `Invalid path format. Expected file:// URL, got: ${url}`,
+          error: `Invalid path format. Expected blank://{locale}/{fileType} or file:// URL, got: ${url}`,
         },
       };
     }
@@ -105,7 +170,11 @@ export const readFileContent: McpTool = {
         description:
           "Read a chunk of a document file as base64-encoded bytes. App-only — called by the editor UI to stream files to the client.",
         inputSchema: {
-          url: z.string().describe("Local file URL (stdio transport only)."),
+          url: z
+            .string()
+            .describe(
+              "Blank file URL in format blank://{locale}/{fileType}, or local file URL (stdio transport only).",
+            ),
           offset: z
             .number()
             .int()

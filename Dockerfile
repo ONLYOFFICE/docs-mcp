@@ -7,6 +7,7 @@ RUN corepack enable
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
+COPY assets ./assets
 COPY scripts ./scripts
 COPY src ./src
 COPY tsconfig.json vite.config.ts ./
