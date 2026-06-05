@@ -19,6 +19,7 @@ const log = {
 };
 
 const TOOL_RESULT_TIMEOUT_MS = 10_000;
+const CONFIG_TOKEN_EXPIRATION_THRESHOLD_MS = 10_000;
 const INLINE_EDITOR_HEIGHT = 600;
 const EDITOR_CONTAINER_ID = "editor";
 
@@ -42,10 +43,49 @@ app.ontoolresult = async (result) => {
 
   showLoading("Waiting loading ONLYOFFICE Editor...");
 
-  const content = result.structuredContent as ToolResultContent;
+  let content = result.structuredContent as ToolResultContent;
 
   const hostContext = app.getHostContext();
   const locale = hostContext?.locale || "en";
+
+  if (content.config.token && isJwtExpired(content.config.token)) {
+    try {
+      const refreshResult = await app.callServerTool({
+        name: "create_editor_config",
+        arguments: {
+          sessionId: content.sessionId,
+          fileName: content.config.document.title,
+          fileUrl: content.fileUrl || content.config.document.url,
+        },
+      });
+
+      if (refreshResult.isError) {
+        const errorMessage = refreshResult.content
+          .map((item) => (item.type === "text" ? item.text : ""))
+          .filter(Boolean)
+          .join("\n");
+
+        showMessageScreen(
+          "Unable to refresh session",
+          errorMessage ||
+            "The session has expired and could not be refreshed. Please ask the assistant to open the file again.",
+          "error",
+        );
+        return null;
+      }
+
+      content = refreshResult.structuredContent as ToolResultContent;
+    } catch (error) {
+      log.error("Unable to refresh config:", error);
+
+      showMessageScreen(
+        "Unable to refresh session",
+        "The session has expired and could not be refreshed. Please ask the assistant to open the file again.",
+        "error",
+      );
+      return null;
+    }
+  }
 
   content.config.editorConfig.lang = locale;
   content.config.type = deviceType();
@@ -180,6 +220,41 @@ const changeDisplayMode = (displayMode: string) => {
 
 const getDisplayModeButton = (): HTMLElement | null => {
   return document.getElementById("display-mode-button");
+};
+
+const isJwtExpired = (token: string): boolean => {
+  const expiresAtSeconds = getJwtExpirationTime(token);
+
+  if (!expiresAtSeconds) {
+    return true;
+  }
+
+  const expiresAtMs = expiresAtSeconds * 1000;
+
+  return Date.now() + CONFIG_TOKEN_EXPIRATION_THRESHOLD_MS >= expiresAtMs;
+};
+
+const getJwtExpirationTime = (token: string): number | null => {
+  const [, payload] = token.split(".");
+
+  if (!payload) {
+    return null;
+  }
+
+  try {
+    const normalizedPayload = payload
+      .replace(/-/g, "+")
+      .replace(/_/g, "/")
+      .padEnd(Math.ceil(payload.length / 4) * 4, "=");
+    const decodedPayload = JSON.parse(atob(normalizedPayload)) as {
+      exp?: unknown;
+    };
+
+    return typeof decodedPayload.exp === "number" ? decodedPayload.exp : null;
+  } catch (error) {
+    log.error("Failed to decode token:", error);
+    return null;
+  }
 };
 
 const deviceType = () => {
