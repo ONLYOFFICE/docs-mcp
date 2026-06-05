@@ -15,6 +15,7 @@ export type EditorConfig = {
     permissions?: {
       edit?: boolean;
     };
+    title?: string;
     url?: string;
   };
   documentType?: string | null;
@@ -24,6 +25,7 @@ export type EditorConfig = {
   };
   type?: "desktop" | "mobile" | "embedded";
   events?: Record<string, unknown>;
+  token?: string;
 };
 
 const log = {
