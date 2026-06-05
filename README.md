@@ -39,6 +39,14 @@ Set `FILE_URL_ALLOWED_ORIGINS` when opening remote document URLs. Set
 `STDIO_LOCAL_FILE_ALLOWED_ROOTS` only when opening local `file://` URLs over
 stdio.
 
+> [!IMPORTANT]
+> Opening local files with `STDIO_LOCAL_FILE_ALLOWED_ROOTS` is available only
+> in ONLYOFFICE Docs Developer.
+>
+> This is a premium feature not included by default and is available at an
+> extra cost. Please contact our sales team at sales@onlyoffice.com to request a
+> quote, or learn more at https://www.onlyoffice.com/developer-edition.
+
 ### stdio with Docker
 
 Example MCP client configuration:
@@ -231,7 +239,7 @@ These variables apply only when the server is started with `--stdio`.
 
 | Environment variable | Required | Default | Description |
 | --- | --- | --- | --- |
-| `STDIO_LOCAL_FILE_ALLOWED_ROOTS` | No | `<empty>` | Allowed local directories for `file://` document access in stdio mode. The paths must be visible inside the running process or container. |
+| `STDIO_LOCAL_FILE_ALLOWED_ROOTS` | No | `<empty>` | Allowed local directories for `file://` document access in stdio mode. The paths must be visible inside the running process or container. Available only in ONLYOFFICE Docs Developer. |
 
 #### Streamable HTTP
 
