@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { execSync } from "child_process";
-import { cpSync, existsSync, readdirSync, rmSync } from "fs";
+import { existsSync, readdirSync, rmSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -42,10 +42,7 @@ for (const app of findExtApps()) {
   run("cross-env vite build", { INPUT: app.input });
 }
 
-// 3. Copy assets
-cpSync(join(root, "assets"), join(root, "dist", "assets"), { recursive: true });
-
-// 4. Bundle server with bun
+// 3. Bundle server with bun
 run(
   'bun build "src/index.ts" --outfile "dist/index.js" --target node --banner "#!/usr/bin/env node"',
 );

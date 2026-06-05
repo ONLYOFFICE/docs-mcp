@@ -37,7 +37,6 @@ type OpenAIFile = z.infer<typeof OpenAIFileSchema>;
 type OpenFileInput = {
   fileUrl?: string;
   openai_file?: OpenAIFile;
-  mode: "edit" | "view";
 };
 
 type OpenFileDeps = {
@@ -66,7 +65,7 @@ export function createOpenFileHandler(deps: OpenFileDeps = {}) {
   const validateDocumentFileUrl =
     deps.validateAllowedDocumentFileUrl ?? validateAllowedDocumentFileUrl;
 
-  return async ({ mode, fileUrl, openai_file }: OpenFileInput) => {
+  return async ({ fileUrl, openai_file }: OpenFileInput) => {
     let fileName: string;
     let downloadUrl: string;
     let isLocalFile = false;
@@ -174,7 +173,7 @@ export function createOpenFileHandler(deps: OpenFileDeps = {}) {
       sessionId,
       fileName,
       fileUrl: isLocalFile ? "_data_" : downloadUrl,
-      mode,
+      mode: "view",
     });
 
     return {
@@ -197,8 +196,7 @@ export const openFile: McpTool = {
       "open_file",
       {
         title: "Open File",
-        description:
-          "Open an existing file in the ONLYOFFICE Editor. Returns a sessionId required by list_editor_tools, call_editor_tool, and save_file.",
+        description: "Open an existing file in the ONLYOFFICE Editor.",
         inputSchema: {
           fileUrl: z
             .url()
@@ -207,12 +205,6 @@ export const openFile: McpTool = {
           openai_file: OpenAIFileSchema.describe(
             "File object returned by OpenAI file upload API. If provided, the file will be downloaded from the download_url.",
           ),
-          mode: z
-            .enum(["edit", "view"])
-            .default("edit")
-            .describe(
-              "Editor mode: 'edit' to allow editing, 'view' for read-only.",
-            ),
         },
         _meta: {
           ui: { resourceUri: EDITOR_APP_RESOURCE_URI },
