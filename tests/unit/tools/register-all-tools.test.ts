@@ -17,6 +17,7 @@ describe("registerAllTools", () => {
 
     expect(registrations.map(([name]) => name)).toEqual([
       "open_file",
+      "create_editor_config",
       "read_file_content",
     ]);
     for (const registration of registrations) {

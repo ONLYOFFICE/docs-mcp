@@ -1,26 +1,17 @@
 import { registerAppTool } from "@modelcontextprotocol/ext-apps/server";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { CONFIG } from "../../config.js";
-import { getTransportMode, type TransportMode } from "../../runtime.js";
+import { type TransportMode } from "../../runtime.js";
 import { EDITOR_APP_RESOURCE_URI } from "../../resources/definitions/editor.js";
 import type { McpTool } from "../index.js";
-import {
-  formatDocumentFileUrlAccessError,
-  validateAllowedDocumentFileUrl,
-} from "../../domain/document-file-url-access.js";
+import { validateAllowedDocumentFileUrl } from "../../domain/document-file-url-access.js";
 import { createEditorConfig } from "../../domain/document-server/editor-config.js";
 import {
   getDocumentType,
-  getExtension,
   getFileNameFromUrl,
 } from "../../domain/document-server/file-utils.js";
-import { formatsProvider } from "../../domain/document-server/formats-provider.js";
-import {
-  formatLocalFileAccessError,
-  resolveAllowedLocalFile,
-  type LocalFileAccessResult,
-} from "../../domain/local-file-access.js";
+import { type LocalFileAccessResult } from "../../domain/local-file-access.js";
+import { createCreateEditorConfigHandler } from "./create-editor-config.js";
 
 const OpenAIFileSchema = z
   .object({
@@ -53,30 +44,20 @@ type OpenFileDeps = {
 };
 
 export function createOpenFileHandler(deps: OpenFileDeps = {}) {
-  const buildEditorConfig = deps.createEditorConfig ?? createEditorConfig;
-  const documentServerBaseUrl =
-    deps.documentServerBaseUrl ?? CONFIG.DOCUMENT_SERVER_BASE_URL;
-  const documentTypeForExtension = deps.getDocumentType ?? getDocumentType;
-  const getMode = deps.getTransportMode ?? getTransportMode;
   const randomUUID = deps.randomUUID ?? crypto.randomUUID.bind(crypto);
-  const resolveLocalFile =
-    deps.resolveAllowedLocalFile ?? resolveAllowedLocalFile;
-  const supportedFormatsProvider = deps.formatsProvider ?? formatsProvider;
-  const validateDocumentFileUrl =
-    deps.validateAllowedDocumentFileUrl ?? validateAllowedDocumentFileUrl;
+
+  const createEditorConfigHandler = createCreateEditorConfigHandler(deps);
 
   return async ({ fileUrl, openai_file }: OpenFileInput) => {
     const sessionId = randomUUID();
 
     let fileName: string;
-    let downloadUrl: string;
 
     if (fileUrl) {
       fileName = getFileNameFromUrl(fileUrl);
-      downloadUrl = fileUrl;
     } else if (openai_file) {
       fileName = openai_file.file_name;
-      downloadUrl = openai_file.download_url;
+      fileUrl = openai_file.download_url;
     } else {
       return {
         content: [
@@ -89,87 +70,7 @@ export function createOpenFileHandler(deps: OpenFileDeps = {}) {
       };
     }
 
-    const isLocalFile = downloadUrl.startsWith("file://");
-
-    if (isLocalFile && getMode() !== "stdio") {
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: "Local file:// URLs are only supported with stdio transport.",
-          },
-        ],
-        isError: true,
-      };
-    }
-
-    if (isLocalFile) {
-      const resolved = await resolveLocalFile(downloadUrl);
-
-      if (!resolved.ok) {
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: formatLocalFileAccessError(downloadUrl, resolved.reason),
-            },
-          ],
-          isError: true,
-        };
-      }
-    }
-
-    if (!isLocalFile) {
-      const validated = validateDocumentFileUrl(downloadUrl);
-
-      if (!validated.ok) {
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: formatDocumentFileUrlAccessError(downloadUrl, validated),
-            },
-          ],
-          isError: true,
-        };
-      }
-    }
-
-    const extension = getExtension(fileName);
-    const documentType = await documentTypeForExtension(extension);
-
-    if (!documentType) {
-      const supportedExtensions =
-        await supportedFormatsProvider.getListViewableExtensions();
-
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: `The file type .${extension} is not supported. Supported file types: ${supportedExtensions.join(", ")}.`,
-          },
-        ],
-        isError: true,
-      };
-    }
-
-    const config = await buildEditorConfig({
-      sessionId,
-      fileName,
-      fileUrl: isLocalFile ? "_data_" : downloadUrl,
-      mode: "view",
-    });
-
-    return {
-      content: [],
-      structuredContent: {
-        sessionId,
-        documentServerBaseUrl,
-        shardkey: config.document.key,
-        config,
-        ...(isLocalFile ? { fileUrl: downloadUrl } : {}),
-      },
-    };
+    return await createEditorConfigHandler({ sessionId, fileName, fileUrl });
   };
 }
 
