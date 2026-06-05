@@ -16,6 +16,7 @@ describe("registerAllTools", () => {
     registerAllTools(server as never);
 
     expect(registrations.map(([name]) => name)).toEqual([
+      "create_file",
       "open_file",
       "save_file",
       "create_editor_config",

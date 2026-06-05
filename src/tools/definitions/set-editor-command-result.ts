@@ -56,7 +56,9 @@ export const setEditorCommandResult: McpTool = {
         description:
           "Report the result of a command back to the MCP server after the editor client has executed it. App-only — called by the editor UI with the outcome of a command received via poll_editor_commands.",
         inputSchema: {
-          sessionId: z.string().describe("Session ID returned by open_file."),
+          sessionId: z
+            .string()
+            .describe("Session ID returned by open_file or create_file."),
           commandId: z
             .string()
             .describe(
