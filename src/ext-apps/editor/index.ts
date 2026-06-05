@@ -88,7 +88,11 @@ app.ontoolresult = async (result) => {
   }
 
   content.config.editorConfig.lang = locale;
-  content.config.type = deviceType();
+  if (content.fileUrl) {
+    content.config.type = "desktop";
+  } else {
+    content.config.type = deviceType();
+  }
 
   const docEditorClient = new DocEditorClient(
     app,
