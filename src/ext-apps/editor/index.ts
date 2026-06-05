@@ -48,6 +48,7 @@ app.ontoolresult = async (result) => {
   const locale = hostContext?.locale || "en";
 
   content.config.editorConfig.lang = locale;
+  content.config.type = deviceType();
 
   const docEditorClient = new DocEditorClient(
     app,
@@ -164,10 +165,26 @@ const initDisplayModeButton = () => {
 
 const changeDisplayMode = (displayMode: string) => {
   const displayModeButton = getDisplayModeButton();
+  if (!displayModeButton) return;
 
-  displayModeButton?.setAttribute("data-mode", displayMode);
+  displayModeButton.setAttribute("data-mode", displayMode);
+
+  if (deviceType() === "mobile") {
+    if (displayMode === "fullscreen") {
+      displayModeButton.style.display = "none";
+    } else {
+      displayModeButton.style.display = "";
+    }
+  }
 };
 
 const getDisplayModeButton = (): HTMLElement | null => {
   return document.getElementById("display-mode-button");
+};
+
+const deviceType = () => {
+  if (window.matchMedia("(pointer: coarse)").matches) {
+    return "mobile";
+  }
+  return "embedded";
 };
