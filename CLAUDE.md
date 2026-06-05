@@ -58,6 +58,8 @@ Tools are split into two visibility planes:
 
 **AI-facing tools** (called by the LLM):
 - `create_file` / `open_file` — create or open a document; return `{ sessionId, documentServerBaseUrl, config }`. Use `registerAppTool` from `@modelcontextprotocol/ext-apps/server`, which causes the MCP host to render the editor UI resource alongside the tool response.
+- `list_editor_tools` — queries the editor plugin for available AI tools via the command queue.
+- `call_editor_tool` — executes a named plugin tool in the open editor.
 - `save_file` — triggers `downloadAs()` in the browser.
 
 **App-only tools** (`_meta: { visibility: ["app"] }`, called only by the embedded editor UI):
@@ -68,9 +70,9 @@ Tools are split into two visibility planes:
 
 `src/command-queue.ts` implements a **promise-based long-poll bridge** between the server and the browser:
 
-1. AI calls `save_file` → server enqueues a `saveFile` command in `CommandQueue` and awaits its promise (30 s timeout).
-2. Browser's `Poller` (`src/ext-apps/editor/poller.ts`) continuously calls `poll_editor_commands` → `CommandQueue.longPoll()` blocks until a command arrives (up to 30 s), then returns the batch.
-3. Browser executes the command via the ONLYOFFICE editor API, then calls `set_editor_command_result` → `CommandQueue.resolve()` resolves the original promise.
+1. AI calls `list_editor_tools` / `call_editor_tool` → server enqueues a `Command` in `CommandQueue` and awaits its promise (30 s timeout).
+2. Browser's `Poller` (`src/ui/poller.ts`) continuously calls `poll_editor_commands` → `CommandQueue.longPoll()` blocks until a command arrives (up to 30 s), then returns the batch.
+3. Browser executes the command via the ONLYOFFICE Connector API, then calls `set_editor_command_result` → `CommandQueue.resolve()` resolves the original promise.
 
 Each session is keyed by `sessionId` (a UUID generated at `open_file`/`create_file` time).
 
@@ -78,8 +80,8 @@ Each session is keyed by `sessionId` (a UUID generated at `open_file`/`create_fi
 
 `DocEditorClient` (`src/ui/doc-editor-client.ts`) manages the ONLYOFFICE `DocsAPI.DocEditor` lifecycle:
 - Loads `api.js` from the Document Server dynamically.
-- On `onDocumentReady`: creates a `Connector` and starts the `Poller`.
-- Handles the `saveFile` command type via `docEditor.downloadAs()`.
+- On `onDocumentReady`: creates a `Connector`, attaches the `ai_onCallToolResult` event, and starts the `Poller`.
+- Handles three command types: `aiListTools` (via `connector.executeMethod("AI", ...)`), `aiCallTool` (via `connector.sendEvent("ai_onCallTool", ...)`), `saveFile` (via `docEditor.downloadAs()`).
 - Commands are processed serially; the next command only starts after `set_editor_command_result` resolves the current one.
 
 ### Adding a new tool

@@ -68,7 +68,7 @@ export const createFile: McpTool = {
       {
         title: "Create File",
         description:
-          "Create a new blank document, spreadsheet, or presentation and open it in the ONLYOFFICE Editor. Returns a sessionId required by save_file.",
+          "Create a new blank document, spreadsheet, or presentation and open it in the ONLYOFFICE Editor. Returns a sessionId required by list_editor_tools, call_editor_tool, and save_file.",
         inputSchema: {
           fileName: z
             .string()

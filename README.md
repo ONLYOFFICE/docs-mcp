@@ -9,8 +9,8 @@ through natural language interactions.
 - Document Editing: Open and modify text documents, spreadsheets, and
   presentations directly in the ONLYOFFICE editor.
 - File Creation: Create new DOCX, XLSX, and PPTX files from blank templates.
-- Editor Sessions: Open documents in an embedded ONLYOFFICE editor and save the
-  current document state.
+- Editor Automation: Discover document-specific editor tools and execute actions
+  such as inserting content, changing formatting, or running macros.
 - Local and Remote File Workflows: Open files from allowed URLs, uploaded files,
   or local `file://` paths when using stdio transport.
 - Embedded App Integrations: Use app tools to coordinate editor sessions,
@@ -170,8 +170,9 @@ The server exposes tools for creating, opening, editing, and saving files. A
 typical editing flow is:
 
 1. Open or create a file with `open_file` or `create_file`.
-2. Make edits in the embedded ONLYOFFICE editor.
-3. Save the result with `save_file`.
+2. Discover editor-specific tools with `list_editor_tools`.
+3. Execute editor actions with `call_editor_tool`.
+4. Save the result with `save_file`.
 
 ### Server tools
 
@@ -182,6 +183,8 @@ saving files.
 | --- | --- |
 | `create_file` | Creates a blank DOCX, XLSX, or PPTX file and opens it for editing. |
 | `open_file` | Opens an existing file from a URL, uploaded file, or allowed local `file://` URL in stdio mode. |
+| `list_editor_tools` | Lists the editor tools available for the current session and document type. |
+| `call_editor_tool` | Executes a named editor tool returned by `list_editor_tools`. |
 | `save_file` | Triggers download of the currently open document. |
 
 ### App tools
@@ -233,6 +236,14 @@ These variables are used by both `stdio` and Streamable HTTP transports.
 | `DOCUMENT_SERVER_JWT_ALGORITHM` | No | `HS256` | JWT signing algorithm. Supported values: `HS256`, `HS384`, `HS512`. |
 | `DOCUMENT_SERVER_JWT_EXPIRES_IN` | No | `60` | JWT token lifetime in seconds. |
 | `FILE_URL_ALLOWED_ORIGINS` | No | `<empty>` | Allowed origins for remote `http://` and `https://` document file URLs. Use `*` to allow any origin. |
+| `DOCUMENT_SERVER_AI_WORD_TOOLS_ENABLED` | No | `insertPage`<br>`changeParagraphStyle`<br>`changeTextStyle`<br>`writeMacro` | Word editor AI tools available through `list_editor_tools`. Set to `all` to allow every Word tool reported by the editor. |
+| `DOCUMENT_SERVER_AI_WORD_TOOLS_DISABLED` | No | `<empty>` | Word editor AI tools to hide even if enabled. Set to `all` to hide every Word tool. |
+| `DOCUMENT_SERVER_AI_CELL_TOOLS_ENABLED` | No | `addAboveAverage`<br>`addCellValueCondition`<br>`addChart`<br>`addColorScale`<br>`addConditionalFormatting`<br>`addDataBars`<br>`addIconSet`<br>`addTop10Condition`<br>`addUniqueValues`<br>`clearConditionalFormatting`<br>`formatTable`<br>`changeTextStyle`<br>`writeMacro` | Spreadsheet editor AI tools available through `list_editor_tools`. Set to `all` to allow every spreadsheet tool reported by the editor. |
+| `DOCUMENT_SERVER_AI_CELL_TOOLS_DISABLED` | No | `<empty>` | Spreadsheet editor AI tools to hide even if enabled. Set to `all` to hide every spreadsheet tool. |
+| `DOCUMENT_SERVER_AI_SLIDE_TOOLS_ENABLED` | No | `addNewSlide`<br>`addShapeToSlide`<br>`addTableToSlide`<br>`addTextToPlaceholder`<br>`changeSlideBackground`<br>`deleteSlide`<br>`duplicateSlide`<br>`writeMacro` | Presentation editor AI tools available through `list_editor_tools`. Set to `all` to allow every presentation tool reported by the editor. |
+| `DOCUMENT_SERVER_AI_SLIDE_TOOLS_DISABLED` | No | `<empty>` | Presentation editor AI tools to hide even if enabled. Set to `all` to hide every presentation tool. |
+| `DOCUMENT_SERVER_AI_PDF_TOOLS_ENABLED` | No | `<empty>` | PDF editor AI tools available through `list_editor_tools`. Set to `all` to allow every PDF tool reported by the editor. |
+| `DOCUMENT_SERVER_AI_PDF_TOOLS_DISABLED` | No | `all` | PDF editor AI tools to hide even if enabled. Set to `all` to hide every PDF tool. |
 
 #### stdio
 

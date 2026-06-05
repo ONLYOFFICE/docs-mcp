@@ -198,7 +198,7 @@ export const openFile: McpTool = {
       {
         title: "Open File",
         description:
-          "Open an existing file in the ONLYOFFICE Editor. Returns a sessionId required by save_file.",
+          "Open an existing file in the ONLYOFFICE Editor. Returns a sessionId required by list_editor_tools, call_editor_tool, and save_file.",
         inputSchema: {
           fileUrl: z
             .url()

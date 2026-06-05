@@ -1,7 +1,7 @@
 const LONG_POLL_TIMEOUT_MS = 30_000;
 const POLL_BATCH_WAIT_MS = 200;
 
-export type CommandType = "saveFile";
+export type CommandType = "aiListTools" | "aiCallTool" | "saveFile";
 
 export interface Command {
   id: string;
