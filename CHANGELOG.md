@@ -5,7 +5,8 @@
 - MCP server for ONLYOFFICE Docs
 - support for stdio transport
 - support for Streamable HTTP transport
-- opening documents in the ONLYOFFICE editor
+- opening existing documents in the ONLYOFFICE editor
+- saving edited documents from the editor
 - support for remote document URLs from allowed origins
 - support for local file URLs in stdio mode
 - JWT signing for ONLYOFFICE editor configuration

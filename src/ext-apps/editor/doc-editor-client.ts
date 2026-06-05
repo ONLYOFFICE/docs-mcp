@@ -1,4 +1,9 @@
 import type { App } from "@modelcontextprotocol/ext-apps";
+import type {
+  CommandType,
+  Command,
+} from "../../domain/editor-session/command-queue.js";
+import { Poller } from "./poller.js";
 
 declare const DocsAPI: {
   DocEditor: new (id: string, config: object) => DocEditor;
@@ -32,11 +37,15 @@ const log = {
 
 export class DocEditorClient {
   private docEditor: DocEditor | null = null;
+  private poller: Poller | null = null;
+  private pendingToolCommandId: string | null = null;
+  private commandQueue: Command[] = [];
 
   constructor(
     private readonly app: App,
     private readonly containerId: string,
     private readonly documentServerBaseUrl: string,
+    private readonly sessionId: string,
   ) {}
 
   async init(shardkey: string): Promise<void> {
@@ -53,7 +62,11 @@ export class DocEditorClient {
         }
       },
       onDocumentReady: () => {
-        this.onDocumentReady();
+        const startPolling =
+          config.document.permissions?.edit === true &&
+          config.editorConfig?.mode === "edit";
+
+        this.onDocumentReady(startPolling);
       },
       onRequestSaveAs: this.onRequestSaveAs,
       onSaveDocument: this.onSaveDocument,
@@ -71,6 +84,57 @@ export class DocEditorClient {
       script.onerror = reject;
       document.head.appendChild(script);
     });
+  }
+
+  private enqueueCommands(commands: Command[]): void {
+    this.commandQueue.push(...commands);
+
+    if (!this.pendingToolCommandId) this.processNext();
+  }
+
+  private processNext(): void {
+    this.pendingToolCommandId = null;
+    const command = this.commandQueue.shift();
+
+    if (!command) return;
+
+    this.pendingToolCommandId = command.id;
+    const handlers: Record<CommandType, () => void> = {
+      saveFile: () => this.saveFile(command),
+    };
+
+    handlers[command.type]?.();
+  }
+
+  private completeCommand(commandId: string, result: unknown): Promise<void> {
+    return this.app
+      .callServerTool({
+        name: "set_editor_command_result",
+        arguments: { sessionId: this.sessionId, commandId, result },
+      })
+      .then(
+        () => {},
+        (err) => log.error("set_editor_command_result failed:", err),
+      )
+      .finally(() => this.processNext());
+  }
+
+  private saveFile(command: Command): void {
+    if (!this.docEditor) {
+      void this.completeCommand(command.id, {
+        error: "Document editor is not available.",
+      });
+      return;
+    }
+
+    try {
+      this.docEditor.downloadAs();
+      void this.completeCommand(command.id, { ok: true });
+    } catch (error) {
+      void this.completeCommand(command.id, {
+        error: error instanceof Error ? error.message : "Failed to save file.",
+      });
+    }
   }
 
   private async readFileContent(url: string): Promise<Uint8Array> {
@@ -122,8 +186,25 @@ export class DocEditorClient {
     this.docEditor.openDocument(await this.readFileContent(fileUrl));
   };
 
-  private readonly onDocumentReady = () => {
+  private readonly onDocumentReady = (startPolling: boolean) => {
     log.info("Document is ready (onDocumentReady)");
+
+    if (startPolling) {
+      this.poller = new Poller(this.app, {
+        tool: "poll_editor_commands",
+        arguments: { sessionId: this.sessionId },
+        onResult: (result) => {
+          const { commands } = result.structuredContent as {
+            commands: Command[];
+          };
+          this.enqueueCommands(commands);
+        },
+        onError: (error) => {
+          log.error("poll_editor_commands error:", error);
+        },
+      });
+      this.poller.start();
+    }
   };
 
   private readonly onRequestSaveAs = async (event: {
