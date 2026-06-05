@@ -31,6 +31,7 @@ type OpenAIFile = z.infer<typeof OpenAIFileSchema>;
 type OpenFileInput = {
   fileUrl?: string;
   openai_file?: OpenAIFile;
+  mode: "edit" | "view";
 };
 
 type OpenFileDeps = {
@@ -84,7 +85,8 @@ export const openFile: McpTool = {
       "open_file",
       {
         title: "Open File",
-        description: "Open an existing file in the ONLYOFFICE Editor.",
+        description:
+          "Open an existing file in the ONLYOFFICE Editor. Returns a sessionId required by save_file.",
         inputSchema: {
           fileUrl: z
             .url()
@@ -93,6 +95,12 @@ export const openFile: McpTool = {
           openai_file: OpenAIFileSchema.describe(
             "File object returned by OpenAI file upload API. If provided, the file will be downloaded from the download_url.",
           ),
+          mode: z
+            .enum(["edit", "view"])
+            .default("edit")
+            .describe(
+              "Editor mode: 'edit' to allow editing, 'view' for read-only.",
+            ),
         },
         outputSchema: EditorConfigOutputSchema,
         _meta: {

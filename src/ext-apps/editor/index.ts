@@ -98,6 +98,7 @@ app.ontoolresult = async (result) => {
     app,
     EDITOR_CONTAINER_ID,
     content.documentServerBaseUrl,
+    content.sessionId,
   );
 
   log.info("Initializing DocEditorClient, sessionId:", content.sessionId);

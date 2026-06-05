@@ -1,18 +1,19 @@
 # ONLYOFFICE Docs MCP Server
 
 The ONLYOFFICE Docs MCP Server connects AI tools to ONLYOFFICE Docs. It lets AI
-agents, assistants, and chatbots open office documents in an embedded editor
+agents, assistants, and chatbots open, edit, and save office documents
 through natural language interactions.
 
 ### Use Cases
 
-- Document Viewing: Open text documents, spreadsheets, and presentations
-  directly in the ONLYOFFICE editor.
-- Editor Sessions: Open documents in an embedded ONLYOFFICE editor.
+- Document Editing: Open and modify text documents, spreadsheets, and
+  presentations directly in the ONLYOFFICE editor.
+- Editor Sessions: Open documents in an embedded ONLYOFFICE editor and save the
+  current document state.
 - Local and Remote File Workflows: Open files from allowed URLs, uploaded files,
   or local `file://` paths when using stdio transport.
-- Embedded App Integrations: Use app tools to coordinate editor sessions and
-  file streaming.
+- Embedded App Integrations: Use app tools to coordinate editor sessions,
+  command execution, and file streaming.
 
 ---
 
@@ -172,18 +173,21 @@ Local `file://` URLs are intentionally supported only over stdio transport.
 
 ## Tools
 
-The server exposes tools for opening files. A typical viewing flow is:
+The server exposes tools for opening, editing, and saving files. A
+typical editing flow is:
 
 1. Open a file with `open_file`.
-2. View it in the embedded ONLYOFFICE editor.
+2. Make edits in the embedded ONLYOFFICE editor.
+3. Save the result with `save_file`.
 
 ### Server tools
 
-These tools are the main MCP interface for opening files.
+These tools are the main MCP interface for opening, editing, and saving files.
 
 | Tool | Purpose |
 | --- | --- |
 | `open_file` | Opens an existing file from a URL, uploaded file, or allowed local `file://` URL in stdio mode. |
+| `save_file` | Triggers download of the currently open document. |
 
 ### App tools
 
@@ -192,6 +196,8 @@ directly.
 
 | Tool | Purpose |
 | --- | --- |
+| `poll_editor_commands` | Long-polls queued commands for an embedded app integration. |
+| `set_editor_command_result` | Reports command execution results from an embedded app integration back to the server. |
 | `read_file_content` | Streams allowed local files as base64 chunks. |
 
 ## Configuration
