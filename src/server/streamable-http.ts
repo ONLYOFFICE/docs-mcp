@@ -10,8 +10,6 @@ import {
   createInFlightLimitMiddleware,
 } from "./rate-limit.js";
 
-const LOCALHOST_ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]"];
-
 type StreamableHTTPServerOptions = {
   host: string;
   port: number;
@@ -53,14 +51,13 @@ export async function startStreamableHTTPServer(
   createServer: () => McpServer,
   options: StreamableHTTPServerOptions,
 ): Promise<void> {
-  const allowedHosts = [
-    ...new Set([
-      ...LOCALHOST_ALLOWED_HOSTS,
-      options.host,
-      ...CONFIG.HTTP_ALLOWED_HOSTS,
-    ]),
-  ];
-  const app = createMcpExpressApp({ host: options.host, allowedHosts });
+  const app = createMcpExpressApp({
+    host: options.host,
+    allowedHosts:
+      CONFIG.HTTP_ALLOWED_HOSTS.length > 0
+        ? [...new Set(CONFIG.HTTP_ALLOWED_HOSTS)]
+        : undefined,
+  });
   app.set("trust proxy", CONFIG.HTTP_TRUST_PROXY);
   app.use(cors(createCorsOptions()));
   app.get("/health", handleHealthCheck);

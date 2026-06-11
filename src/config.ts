@@ -39,6 +39,15 @@ function makeOriginListSchema(envName: string, defaultValue: string[] = []) {
 }
 
 function normalizeHostname(value: string): string {
+  // Bare IPv6 (e.g. "::1", "2001:db8::1") — wrap in brackets to match HTTP Host header format
+  if (
+    !value.startsWith("[") &&
+    !value.includes("/") &&
+    value.split(":").length > 2
+  ) {
+    return `[${value.toLowerCase()}]`;
+  }
+
   try {
     return new URL(value).hostname;
   } catch {}
