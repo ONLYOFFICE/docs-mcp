@@ -23,6 +23,36 @@ type ReadFileContentDeps = {
   resolveAllowedLocalFile?: (uri: string) => Promise<LocalFileAccessResult>;
 };
 
+export const ReadFileContentOutputSchema = {
+  bytes: z.string().optional().describe("Base64-encoded file bytes."),
+  offset: z
+    .number()
+    .int()
+    .min(0)
+    .optional()
+    .describe("Byte offset that was read."),
+  byteCount: z
+    .number()
+    .int()
+    .min(0)
+    .optional()
+    .describe("Number of bytes read."),
+  totalBytes: z
+    .number()
+    .int()
+    .min(0)
+    .optional()
+    .describe("Total file size in bytes."),
+  hasMore: z
+    .boolean()
+    .optional()
+    .describe("Whether more bytes remain after this chunk."),
+  error: z
+    .string()
+    .optional()
+    .describe("Error message explaining why the file was not read."),
+};
+
 export function createReadFileContentHandler(deps: ReadFileContentDeps = {}) {
   const getMode = deps.getTransportMode ?? getTransportMode;
   const resolveLocalFile =
@@ -121,6 +151,7 @@ export const readFileContent: McpTool = {
             .default(MAX_CHUNK_BYTES)
             .describe("Bytes to read"),
         },
+        outputSchema: ReadFileContentOutputSchema,
         _meta: { ui: { visibility: ["app"] } },
       },
       createReadFileContentHandler(),

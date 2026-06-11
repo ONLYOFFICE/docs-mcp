@@ -11,7 +11,10 @@ import {
   getFileNameFromUrl,
 } from "../../domain/document-server/file-utils.js";
 import { type LocalFileAccessResult } from "../../domain/local-file-access.js";
-import { createCreateEditorConfigHandler } from "./create-editor-config.js";
+import {
+  createCreateEditorConfigHandler,
+  EditorConfigOutputSchema,
+} from "./create-editor-config.js";
 
 const OpenAIFileSchema = z
   .object({
@@ -91,6 +94,7 @@ export const openFile: McpTool = {
             "File object returned by OpenAI file upload API. If provided, the file will be downloaded from the download_url.",
           ),
         },
+        outputSchema: EditorConfigOutputSchema,
         _meta: {
           ui: { resourceUri: EDITOR_APP_RESOURCE_URI },
           "openai/fileParams": ["openai_file"],

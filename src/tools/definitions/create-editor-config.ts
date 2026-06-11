@@ -38,6 +38,21 @@ type CreateEditorConfigDeps = {
   validateAllowedDocumentFileUrl?: typeof validateAllowedDocumentFileUrl;
 };
 
+export const EditorConfigOutputSchema = {
+  sessionId: z.string().describe("Editor session ID."),
+  documentServerBaseUrl: z
+    .string()
+    .describe("Base URL of the ONLYOFFICE Document Server."),
+  shardkey: z.string().describe("Document key used as the editor shard key."),
+  config: z.looseObject({}).describe("ONLYOFFICE Docs editor configuration."),
+  fileUrl: z
+    .string()
+    .optional()
+    .describe(
+      "Original local file URL when streaming file bytes from the app.",
+    ),
+};
+
 export function createCreateEditorConfigHandler(
   deps: CreateEditorConfigDeps = {},
 ) {
@@ -158,6 +173,7 @@ export const createEditorConfig: McpTool = {
               "Document URL to open. Local file:// URLs are supported only with stdio transport.",
             ),
         },
+        outputSchema: EditorConfigOutputSchema,
         _meta: { ui: { visibility: ["app"] } },
       },
       createCreateEditorConfigHandler(),
