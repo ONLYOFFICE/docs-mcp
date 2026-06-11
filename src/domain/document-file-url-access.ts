@@ -1,4 +1,5 @@
 import { CONFIG } from "../config.js";
+import { matchesDocumentFileUrlOriginPattern } from "./document-file-url-origin-pattern.js";
 
 export type DocumentFileUrlAccessError =
   | "invalid_url"
@@ -9,10 +10,6 @@ export type DocumentFileUrlAccessError =
 type DocumentFileUrlAccessResult =
   | { ok: true }
   | { ok: false; reason: DocumentFileUrlAccessError; origin?: string };
-
-function normalizeOrigin(origin: string): string {
-  return new URL(origin).origin;
-}
 
 export function validateAllowedDocumentFileUrl(
   url: string,
@@ -33,22 +30,19 @@ export function validateAllowedDocumentFileUrl(
     return { ok: false, reason: "not_configured", origin: parsed.origin };
   }
 
-  if (allowedOriginsConfig.includes("*")) {
+  if (
+    allowedOriginsConfig.some((originPattern) =>
+      matchesDocumentFileUrlOriginPattern(parsed, originPattern),
+    )
+  ) {
     return { ok: true };
   }
 
-  const allowedOrigins = new Set(
-    allowedOriginsConfig.map((origin) => normalizeOrigin(origin)),
-  );
-  if (!allowedOrigins.has(parsed.origin)) {
-    return {
-      ok: false,
-      reason: "outside_allowed_origins",
-      origin: parsed.origin,
-    };
-  }
-
-  return { ok: true };
+  return {
+    ok: false,
+    reason: "outside_allowed_origins",
+    origin: parsed.origin,
+  };
 }
 
 export function formatDocumentFileUrlAccessError(

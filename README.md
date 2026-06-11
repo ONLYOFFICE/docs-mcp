@@ -231,7 +231,7 @@ These variables are used by both `stdio` and Streamable HTTP transports.
 | `DOCUMENT_SERVER_JWT_SECRET` | Yes | `<not set>` | JWT secret used to sign editor configuration tokens. |
 | `DOCUMENT_SERVER_JWT_ALGORITHM` | No | `HS256` | JWT signing algorithm. Supported values: `HS256`, `HS384`, `HS512`. |
 | `DOCUMENT_SERVER_JWT_EXPIRES_IN` | No | `60` | JWT token lifetime in seconds. |
-| `FILE_URL_ALLOWED_ORIGINS` | No | `<empty>` | Allowed origins for remote `http://` and `https://` document file URLs. Use `*` to allow any origin. |
+| `FILE_URL_ALLOWED_ORIGINS` | No | `<empty>` | Allowed origins, domains, or wildcard domains for remote `http://` and `https://` document file URLs. Use `*` to allow any origin. Entries with a scheme, such as `https://files.example.com`, match that exact origin. Entries without a scheme, such as `files.example.com` or `*.example.com`, match both `http` and `https`; wildcard domains match nested subdomains but not the parent domain. |
 
 #### stdio
 

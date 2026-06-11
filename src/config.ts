@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { isDocumentFileUrlOriginPattern } from "./domain/document-file-url-origin-pattern.js";
+
 function makeStringListSchema(defaultValue: string[] = []) {
   return z
     .string()
@@ -32,6 +34,22 @@ function makeOriginListSchema(envName: string, defaultValue: string[] = []) {
         ctx.addIssue({
           code: "custom",
           message: `${envName} must contain valid origins or "*", got: ${origin}`,
+        });
+      }
+    }
+  });
+}
+
+function makeDocumentFileUrlOriginListSchema(
+  envName: string,
+  defaultValue: string[] = [],
+) {
+  return makeStringListSchema(defaultValue).superRefine((origins, ctx) => {
+    for (const origin of origins) {
+      if (!isDocumentFileUrlOriginPattern(origin)) {
+        ctx.addIssue({
+          code: "custom",
+          message: `${envName} must contain valid http(s) origins, domains, wildcard domains, or "*", got: ${origin}`,
         });
       }
     }
@@ -93,7 +111,9 @@ const EnvSchema = z.object({
   HTTP_RATE_LIMIT_MAX_IN_FLIGHT: z.coerce.number().int().positive().default(20),
   HTTP_CORS_ALLOWED_ORIGINS: makeOriginListSchema("HTTP_CORS_ALLOWED_ORIGINS"),
   STDIO_LOCAL_FILE_ALLOWED_ROOTS: makeStringListSchema(),
-  FILE_URL_ALLOWED_ORIGINS: makeOriginListSchema("FILE_URL_ALLOWED_ORIGINS"),
+  FILE_URL_ALLOWED_ORIGINS: makeDocumentFileUrlOriginListSchema(
+    "FILE_URL_ALLOWED_ORIGINS",
+  ),
   DOCUMENT_SERVER_BASE_URL: z.url(
     "DOCUMENT_SERVER_BASE_URL must be a valid URL",
   ),

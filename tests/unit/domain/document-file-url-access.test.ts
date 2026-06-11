@@ -76,6 +76,87 @@ describe("document-file-url-access", () => {
     });
   });
 
+  test("allows bare domains for both HTTP and HTTPS URLs", async () => {
+    const { validateAllowedDocumentFileUrl } =
+      await import("../../../src/domain/document-file-url-access.ts");
+    const allowedOrigins = ["files.example.com"];
+
+    expect(
+      validateAllowedDocumentFileUrl(
+        "https://files.example.com/report.docx",
+        allowedOrigins,
+      ),
+    ).toEqual({ ok: true });
+    expect(
+      validateAllowedDocumentFileUrl(
+        "http://files.example.com/report.docx",
+        allowedOrigins,
+      ),
+    ).toEqual({ ok: true });
+    expect(
+      validateAllowedDocumentFileUrl(
+        "https://other.example.com/report.docx",
+        allowedOrigins,
+      ),
+    ).toEqual({
+      ok: false,
+      reason: "outside_allowed_origins",
+      origin: "https://other.example.com",
+    });
+  });
+
+  test("allows wildcard domains without allowing the parent domain", async () => {
+    const { validateAllowedDocumentFileUrl } =
+      await import("../../../src/domain/document-file-url-access.ts");
+    const allowedOrigins = ["*.example.com"];
+
+    expect(
+      validateAllowedDocumentFileUrl(
+        "https://files.example.com/report.docx",
+        allowedOrigins,
+      ),
+    ).toEqual({ ok: true });
+    expect(
+      validateAllowedDocumentFileUrl(
+        "https://deep.files.example.com/report.docx",
+        allowedOrigins,
+      ),
+    ).toEqual({ ok: true });
+    expect(
+      validateAllowedDocumentFileUrl(
+        "https://example.com/report.docx",
+        allowedOrigins,
+      ),
+    ).toEqual({
+      ok: false,
+      reason: "outside_allowed_origins",
+      origin: "https://example.com",
+    });
+  });
+
+  test("supports protocol-scoped wildcard domains", async () => {
+    const { validateAllowedDocumentFileUrl } =
+      await import("../../../src/domain/document-file-url-access.ts");
+    const allowedOrigins = ["https://*.example.com"];
+
+    expect(
+      validateAllowedDocumentFileUrl(
+        "https://files.example.com/report.docx",
+        allowedOrigins,
+      ),
+    ).toEqual({ ok: true });
+    expect(
+      validateAllowedDocumentFileUrl(
+        "http://files.example.com/report.docx",
+        allowedOrigins,
+      ),
+    ).toEqual({
+      ok: false,
+      reason: "outside_allowed_origins",
+      origin: "http://files.example.com",
+    });
+  });
+
   test("formats access errors", async () => {
     const { formatDocumentFileUrlAccessError } =
       await import("../../../src/domain/document-file-url-access.ts");
