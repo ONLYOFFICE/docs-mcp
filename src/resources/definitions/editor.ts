@@ -33,6 +33,9 @@ export const editorResource: McpResource = {
               text: html,
               _meta: {
                 ui: {
+                  ...(CONFIG.HTTP_PUBLIC_URL
+                    ? { domain: CONFIG.HTTP_PUBLIC_URL }
+                    : {}),
                   prefersBorder: true,
                   csp: {
                     resourceDomains: [CONFIG.DOCUMENT_SERVER_BASE_URL],

@@ -51,12 +51,19 @@ export async function startStreamableHTTPServer(
   createServer: () => McpServer,
   options: StreamableHTTPServerOptions,
 ): Promise<void> {
+  const publicUrlHostname = CONFIG.HTTP_PUBLIC_URL
+    ? new URL(CONFIG.HTTP_PUBLIC_URL).hostname
+    : undefined;
+
+  const allowedHosts = [
+    ...CONFIG.HTTP_ALLOWED_HOSTS,
+    ...(publicUrlHostname ? [publicUrlHostname] : []),
+  ];
+
   const app = createMcpExpressApp({
     host: options.host,
     allowedHosts:
-      CONFIG.HTTP_ALLOWED_HOSTS.length > 0
-        ? [...new Set(CONFIG.HTTP_ALLOWED_HOSTS)]
-        : undefined,
+      allowedHosts.length > 0 ? [...new Set(allowedHosts)] : undefined,
   });
   app.set("trust proxy", CONFIG.HTTP_TRUST_PROXY);
   app.use(cors(createCorsOptions()));

@@ -105,6 +105,11 @@ function makeTrustProxySchema() {
 
 const EnvSchema = z.object({
   HTTP_ALLOWED_HOSTS: makeHostnameListSchema(),
+  HTTP_PUBLIC_URL: z
+    .string()
+    .optional()
+    .transform((val) => val || undefined)
+    .pipe(z.url("HTTP_PUBLIC_URL must be a valid URL").optional()),
   HTTP_TRUST_PROXY: makeTrustProxySchema(),
   HTTP_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
   HTTP_RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(120),
