@@ -8,6 +8,7 @@ import {
   resolveAllowedLocalFile,
   type LocalFileAccessResult,
 } from "../../domain/local-file-access.js";
+import { registerAppTool } from "@modelcontextprotocol/ext-apps/server";
 
 export const MAX_CHUNK_BYTES = 512 * 1024;
 
@@ -99,7 +100,8 @@ export function createReadFileContentHandler(deps: ReadFileContentDeps = {}) {
 
 export const readFileContent: McpTool = {
   register(server: McpServer): void {
-    server.registerTool(
+    registerAppTool(
+      server,
       "read_file_content",
       {
         description:
@@ -119,7 +121,7 @@ export const readFileContent: McpTool = {
             .default(MAX_CHUNK_BYTES)
             .describe("Bytes to read"),
         },
-        _meta: { visibility: ["app"] },
+        _meta: { ui: { visibility: ["app"] } },
       },
       createReadFileContentHandler(),
     );

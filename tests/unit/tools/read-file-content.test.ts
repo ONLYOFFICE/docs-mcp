@@ -165,7 +165,7 @@ describe("read-file-content", () => {
           offset: expect.anything(),
           byteCount: expect.anything(),
         },
-        _meta: { visibility: ["app"] },
+        _meta: { ui: { visibility: ["app"] } },
       },
       expect.any(Function),
     ]);

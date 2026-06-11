@@ -70,7 +70,7 @@ describe("create-editor-config", () => {
           fileName: expect.anything(),
           fileUrl: expect.anything(),
         },
-        _meta: { visibility: ["app"] },
+        _meta: { ui: { visibility: ["app"] } },
       },
       expect.any(Function),
     ]);

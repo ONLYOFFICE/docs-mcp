@@ -18,6 +18,7 @@ import {
   resolveAllowedLocalFile,
   type LocalFileAccessResult,
 } from "../../domain/local-file-access.js";
+import { registerAppTool } from "@modelcontextprotocol/ext-apps/server";
 
 type CreateEditorConfigInput = {
   sessionId: string;
@@ -138,7 +139,8 @@ export function createCreateEditorConfigHandler(
 
 export const createEditorConfig: McpTool = {
   register(server: McpServer): void {
-    server.registerTool(
+    registerAppTool(
+      server,
       "create_editor_config",
       {
         description:
@@ -156,7 +158,7 @@ export const createEditorConfig: McpTool = {
               "Document URL to open. Local file:// URLs are supported only with stdio transport.",
             ),
         },
-        _meta: { visibility: ["app"] },
+        _meta: { ui: { visibility: ["app"] } },
       },
       createCreateEditorConfigHandler(),
     );
