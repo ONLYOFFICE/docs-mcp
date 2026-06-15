@@ -56,6 +56,7 @@ app.ontoolresult = async (result) => {
           sessionId: content.sessionId,
           fileName: content.config.document.title,
           fileUrl: content.fileUrl || content.config.document.url,
+          mode: content.config.editorConfig.mode,
         },
       });
 

@@ -52,7 +52,7 @@ export function createOpenFileHandler(deps: OpenFileDeps = {}) {
 
   const createEditorConfigHandler = createCreateEditorConfigHandler(deps);
 
-  return async ({ fileUrl, openai_file }: OpenFileInput) => {
+  return async ({ fileUrl, openai_file, mode }: OpenFileInput) => {
     const sessionId = randomUUID();
 
     let fileName: string;
@@ -74,7 +74,12 @@ export function createOpenFileHandler(deps: OpenFileDeps = {}) {
       };
     }
 
-    return await createEditorConfigHandler({ sessionId, fileName, fileUrl });
+    return await createEditorConfigHandler({
+      sessionId,
+      fileName,
+      fileUrl,
+      mode,
+    });
   };
 }
 
