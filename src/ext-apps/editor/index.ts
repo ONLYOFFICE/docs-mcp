@@ -93,6 +93,13 @@ app.ontoolresult = async (result) => {
     content.config.type = "desktop";
   } else {
     content.config.type = deviceType();
+    if (
+      content.config.type === "desktop" &&
+      (content.config.document.permissions?.edit === false ||
+        content.config.editorConfig.mode === "view")
+    ) {
+      content.config.type = "embedded";
+    }
   }
 
   const docEditorClient = new DocEditorClient(
@@ -267,5 +274,5 @@ const deviceType = () => {
   if (window.matchMedia("(pointer: coarse)").matches) {
     return "mobile";
   }
-  return "embedded";
+  return "desktop";
 };
