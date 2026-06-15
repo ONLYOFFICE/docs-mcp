@@ -45,7 +45,6 @@ describe("createEditorConfig", () => {
         permissions: {
           edit: true,
           chat: false,
-          download: false,
           print: false,
         },
       },
@@ -108,7 +107,6 @@ describe("createEditorConfig", () => {
       permissions: {
         edit: false,
         chat: false,
-        download: false,
         print: false,
       },
     });
