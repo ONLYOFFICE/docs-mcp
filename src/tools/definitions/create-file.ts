@@ -10,8 +10,8 @@ const FILE_TYPES = ["docx", "xlsx", "pptx"] as const;
 const fileTypeSchema = z.enum(FILE_TYPES);
 type FileType = z.infer<typeof fileTypeSchema>;
 
-export function getBlankFileUrl(locale: string, fileType: FileType): string {
-  return `blank://${locale}/${fileType}`;
+export function getBlankFileUrl(): string {
+  return "https://static.onlyoffice.com/assets/docs/samples/blank";
 }
 
 export function getFileName(fileName: string, fileType: FileType): string {
@@ -43,8 +43,9 @@ export function createCreateFileHandler(deps: CreateFileDeps = {}) {
     const config = await buildEditorConfig({
       sessionId,
       fileName: getFileName(fileName, fileType),
-      fileUrl: `_data_`,
+      fileUrl: getBlankFileUrl(),
       mode: "edit",
+      locale,
     });
 
     return {
@@ -54,7 +55,6 @@ export function createCreateFileHandler(deps: CreateFileDeps = {}) {
         documentServerBaseUrl,
         shardkey: config.document.key,
         config,
-        fileUrl: getBlankFileUrl(locale || "default", fileType),
       },
     };
   };

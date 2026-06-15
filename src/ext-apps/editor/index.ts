@@ -88,7 +88,7 @@ app.ontoolresult = async (result) => {
     }
   }
 
-  content.config.editorConfig.lang = locale;
+  content.config.editorConfig.lang = content.config.editorConfig.lang || locale;
   if (content.fileUrl) {
     content.config.type = "desktop";
   } else {

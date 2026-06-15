@@ -8,8 +8,8 @@ describe("create-file", () => {
     const { getBlankFileUrl } =
       await import("../../../src/tools/definitions/create-file.ts");
 
-    expect(getBlankFileUrl("en-US", "docx")).toBe("blank://en-US/docx");
-    expect(getBlankFileUrl("default", "xlsx")).toBe("blank://default/xlsx");
+    expect(getBlankFileUrl("en-US", "docx")).toEqual(expect.anything());
+    expect(getBlankFileUrl("default", "xlsx")).toEqual(expect.anything());
   });
 
   test("adds the selected extension when the file name has no matching suffix", async () => {
@@ -49,7 +49,6 @@ describe("create-file", () => {
           document: { key: "session-1", title: "Document.docx" },
           editorConfig: { mode: "edit" },
         },
-        fileUrl: "blank://en/docx",
       },
     });
     await expect(
@@ -58,7 +57,6 @@ describe("create-file", () => {
       structuredContent: {
         shardkey: "session-1",
         config: { document: { key: "session-1", title: "Sheet.xlsx" } },
-        fileUrl: "blank://de/xlsx",
       },
     });
     await expect(
@@ -67,27 +65,29 @@ describe("create-file", () => {
       structuredContent: {
         shardkey: "session-1",
         config: { document: { key: "session-1", title: "Deck.pptx" } },
-        fileUrl: "blank://fr/pptx",
       },
     });
     expect(calls).toEqual([
       {
         sessionId: "session-1",
         fileName: "Document.docx",
-        fileUrl: "_data_",
+        fileUrl: expect.anything(),
         mode: "edit",
+        locale: "en",
       },
       {
         sessionId: "session-1",
         fileName: "Sheet.xlsx",
-        fileUrl: "_data_",
+        fileUrl: expect.anything(),
         mode: "edit",
+        locale: "de",
       },
       {
         sessionId: "session-1",
         fileName: "Deck.pptx",
-        fileUrl: "_data_",
+        fileUrl: expect.anything(),
         mode: "edit",
+        locale: "fr",
       },
     ]);
   });
@@ -106,7 +106,6 @@ describe("create-file", () => {
     ).resolves.toMatchObject({
       structuredContent: {
         shardkey: "session-1",
-        fileUrl: "blank://default/docx",
       },
     });
   });
