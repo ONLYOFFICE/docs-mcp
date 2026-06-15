@@ -83,7 +83,7 @@ export const createFile: McpTool = {
             .string()
             .optional()
             .describe(
-              "Template locale (e.g. 'en', 'en-US', 'en-GB', 'de', 'es'). Determines the language of the template content.",
+              "Template locale in BCP 47 language-region format (e.g. 'en-US', 'en-GB', 'ru-RU', 'sr-Cyrl-RS'). Use a full locale tag, not a language-only code like 'en' or 'ru'. Determines the language of the template content.",
             ),
         },
         outputSchema: EditorConfigOutputSchema,

@@ -38,7 +38,7 @@ describe("create-file", () => {
     });
 
     await expect(
-      handler({ fileName: "Document", fileType: "docx", locale: "en" }),
+      handler({ fileName: "Document", fileType: "docx", locale: "en-US" }),
     ).resolves.toEqual({
       content: [],
       structuredContent: {
@@ -52,7 +52,7 @@ describe("create-file", () => {
       },
     });
     await expect(
-      handler({ fileName: "Sheet", fileType: "xlsx", locale: "de" }),
+      handler({ fileName: "Sheet", fileType: "xlsx", locale: "de-DE" }),
     ).resolves.toMatchObject({
       structuredContent: {
         shardkey: "session-1",
@@ -60,7 +60,7 @@ describe("create-file", () => {
       },
     });
     await expect(
-      handler({ fileName: "Deck", fileType: "pptx", locale: "fr" }),
+      handler({ fileName: "Deck", fileType: "pptx", locale: "fr-FR" }),
     ).resolves.toMatchObject({
       structuredContent: {
         shardkey: "session-1",
@@ -73,21 +73,21 @@ describe("create-file", () => {
         fileName: "Document.docx",
         fileUrl: expect.anything(),
         mode: "edit",
-        locale: "en",
+        locale: "en-US",
       },
       {
         sessionId: "session-1",
         fileName: "Sheet.xlsx",
         fileUrl: expect.anything(),
         mode: "edit",
-        locale: "de",
+        locale: "de-DE",
       },
       {
         sessionId: "session-1",
         fileName: "Deck.pptx",
         fileUrl: expect.anything(),
         mode: "edit",
-        locale: "fr",
+        locale: "fr-FR",
       },
     ]);
   });
