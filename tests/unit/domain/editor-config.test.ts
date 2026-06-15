@@ -59,6 +59,7 @@ describe("createEditorConfig", () => {
             request: false,
           },
         },
+        lang: "en",
       },
     };
 

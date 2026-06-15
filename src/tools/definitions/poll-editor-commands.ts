@@ -49,7 +49,9 @@ export const pollEditorCommands: McpTool = {
         description:
           "Long-poll for pending commands queued for the document editor client. App-only — called by the editor UI on a regular interval to receive server-issued commands.",
         inputSchema: {
-          sessionId: z.string().describe("Session ID returned by open_file."),
+          sessionId: z
+            .string()
+            .describe("Session ID returned by open_file or create_file."),
         },
         outputSchema: PollEditorCommandsOutputSchema,
         _meta: { ui: { visibility: ["app"] } },

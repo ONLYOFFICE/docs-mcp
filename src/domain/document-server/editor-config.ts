@@ -7,6 +7,7 @@ type CreateEditorConfigParams = {
   fileName: string;
   fileUrl: string;
   mode: "edit" | "view";
+  locale?: string;
 };
 
 type CreateEditorConfigDeps = {
@@ -19,7 +20,13 @@ type CreateEditorConfigDeps = {
 };
 
 export async function createEditorConfig(
-  { sessionId, fileName, fileUrl, mode }: CreateEditorConfigParams,
+  {
+    sessionId,
+    fileName,
+    fileUrl,
+    mode,
+    locale = "en",
+  }: CreateEditorConfigParams,
   deps: CreateEditorConfigDeps = {},
 ) {
   const getType = deps.getDocumentType ?? getDocumentType;
@@ -49,6 +56,7 @@ export async function createEditorConfig(
           request: false,
         },
       },
+      lang: locale,
     },
   };
 
