@@ -34,6 +34,9 @@ export async function createEditorConfig(
       url: fileUrl,
       permissions: {
         edit: await getIsEditable(extension),
+        download: false,
+        print: false,
+        chat: false,
       },
     },
     documentType: await getType(extension),

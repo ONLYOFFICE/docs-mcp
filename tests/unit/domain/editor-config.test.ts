@@ -44,6 +44,9 @@ describe("createEditorConfig", () => {
         url: "https://files.example.com/Report.DOCX",
         permissions: {
           edit: true,
+          chat: false,
+          download: false,
+          print: false,
         },
       },
       documentType: "word",
@@ -104,6 +107,9 @@ describe("createEditorConfig", () => {
       url: "_data_",
       permissions: {
         edit: false,
+        chat: false,
+        download: false,
+        print: false,
       },
     });
     expect(payload.documentType).toBe("cell");
