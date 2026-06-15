@@ -1,0 +1,84 @@
+name: Docker Build
+
+on:
+  push:
+    branches:
+    - develop
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      DOCKERHUB_NAMESPACE: onlyoffice
+      DOCKERHUB_REPOSITORY: docs-mcp
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v6
+
+    - name: Setup QEMU
+      uses: docker/setup-qemu-action@v4
+
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v4
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v4
+      with:
+        username: ${{secrets.DOCKERHUB_USERNAME}}
+        password: ${{secrets.DOCKERHUB_TOKEN}}
+
+    # TODO: Remove when CHANGELOG.md contains a valid version (## X.Y.Z)
+    - name: Set RC Tag
+      run: |
+        echo "RC_TAG=1.0.1-rc.${{github.run_number}}" >> "$GITHUB_ENV"
+
+    # TODO: Uncomment when CHANGELOG.md contains a valid version (## X.Y.Z)
+    # - name: Get Version Script
+    #   run: wget https://raw.githubusercontent.com/ONLYOFFICE/ga-common/refs/heads/master/.github/scripts/get_connector_version.py
+    #
+    # - name: Set RC Tag
+    #   run: |
+    #     echo "RC_TAG=$(python3 get_connector_version.py CHANGELOG.md)-rc.${{github.run_number}}" >> "$GITHUB_ENV"
+
+    - name: Extract Labels
+      id: labels
+      run: |
+        labels=""
+        while IFS= read -r c; do
+          case "$c" in
+          LABEL*)
+            c=$(echo "$c" | sed "s/^LABEL[[:space:]]*//")
+            n=$(echo "$c" | cut --delimiter="=" --fields=1)
+            v=$(echo "$c" | cut --delimiter="=" --fields=2- | sed "s/\"//g")
+            labels="$labels$n=$v\n"
+            ;;
+          esac
+        done < Dockerfile
+        if [ -n "$labels" ]; then
+          labels=$(printf "%s" "$labels" | sed "s/\\\\n$//")
+        fi
+        printf "labels<<EOF\n%b\nEOF\n" "$labels" >> "$GITHUB_OUTPUT"
+
+    - name: Publish Image
+      uses: docker/build-push-action@v6
+      env:
+        DOCKER_BUILD_RECORD_UPLOAD: false
+      with:
+        push: true
+        platforms: linux/amd64,linux/arm64
+        labels: ${{steps.labels.outputs.labels}}
+        tags: index.docker.io/${{env.DOCKERHUB_NAMESPACE}}/${{env.DOCKERHUB_REPOSITORY}}:${{env.RC_TAG}}
+
+  update:
+    name: Update Connector
+    needs:
+    - docker
+    runs-on: ubuntu-latest
+    steps:
+    - name: Make Hook
+      run: |
+        docs_mcp_webhook_hash=$(printf 'docs-mcp-webhook' | openssl dgst -sha256 -r -hmac "${{secrets.DOCS_MCP_WEBHOOK_TOKEN}}" | awk '{print $1}')
+        curl ${{secrets.DOCS_MCP_WEBHOOK_URL}} -X POST -H "X-Signature: sha256=${docs_mcp_webhook_hash}" -d 'docs-mcp-webhook'
+      shell: bash
