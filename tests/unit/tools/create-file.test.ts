@@ -132,6 +132,13 @@ describe("create-file", () => {
           fileType: expect.anything(),
           locale: expect.anything(),
         },
+        outputSchema: {
+          sessionId: expect.anything(),
+          documentServerBaseUrl: expect.anything(),
+          shardkey: expect.anything(),
+          config: expect.anything(),
+          fileUrl: expect.anything(),
+        },
         _meta: {
           ui: { resourceUri: "ui://editor/index.html" },
           "ui/resourceUri": "ui://editor/index.html",
