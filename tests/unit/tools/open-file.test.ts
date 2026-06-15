@@ -9,7 +9,7 @@ describe("open-file", () => {
       await import("../../../src/tools/definitions/open-file.ts");
     const handler = createOpenFileHandler();
 
-    await expect(handler({})).resolves.toEqual({
+    await expect(handler({ mode: "edit" })).resolves.toEqual({
       content: [
         {
           type: "text",
@@ -39,6 +39,7 @@ describe("open-file", () => {
     });
 
     const result = await handler({
+      mode: "view",
       fileUrl:
         "https://files.example.com/reports/Quarterly%20Report.docx?download=1",
     });
@@ -79,6 +80,7 @@ describe("open-file", () => {
 
     await expect(
       handler({
+        mode: "edit",
         fileUrl: "https://files.example.com/report.docx",
       }),
     ).resolves.toEqual({
@@ -111,6 +113,7 @@ describe("open-file", () => {
     });
 
     const result = await handler({
+      mode: "edit",
       openai_file: {
         download_url: "https://files.example.com/sheet.xlsx",
         file_id: "file-1",
@@ -123,7 +126,7 @@ describe("open-file", () => {
         sessionId: "session-1",
         fileName: "Budget.xlsx",
         fileUrl: "https://files.example.com/sheet.xlsx",
-        mode: "view",
+        mode: "edit",
       },
     ]);
     expect(result).toMatchObject({
@@ -155,6 +158,7 @@ describe("open-file", () => {
 
     await expect(
       handler({
+        mode: "edit",
         fileUrl: "https://files.example.com/archive.zip",
       }),
     ).resolves.toEqual({
@@ -181,7 +185,7 @@ describe("open-file", () => {
     });
 
     await expect(
-      handler({ fileUrl: "file:///tmp/report.docx" }),
+      handler({ mode: "edit", fileUrl: "file:///tmp/report.docx" }),
     ).resolves.toEqual({
       content: [
         {
@@ -206,7 +210,7 @@ describe("open-file", () => {
     });
 
     await expect(
-      handler({ fileUrl: "file:///tmp/report.docx" }),
+      handler({ mode: "edit", fileUrl: "file:///tmp/report.docx" }),
     ).resolves.toEqual({
       content: [
         {
@@ -239,6 +243,7 @@ describe("open-file", () => {
     });
 
     const result = await handler({
+      mode: "edit",
       fileUrl: "file:///C:/tmp/Report.docx",
     });
 
@@ -247,7 +252,7 @@ describe("open-file", () => {
         sessionId: "session-1",
         fileName: "Report.docx",
         fileUrl: "_data_",
-        mode: "view",
+        mode: "edit",
       },
     ]);
     expect(result).toEqual({
@@ -282,6 +287,7 @@ describe("open-file", () => {
         inputSchema: {
           fileUrl: expect.anything(),
           openai_file: expect.anything(),
+          mode: expect.anything(),
         },
         _meta: {
           ui: { resourceUri: "ui://editor/index.html" },

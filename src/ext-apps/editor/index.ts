@@ -56,6 +56,7 @@ app.ontoolresult = async (result) => {
           sessionId: content.sessionId,
           fileName: content.config.document.title,
           fileUrl: content.fileUrl || content.config.document.url,
+          mode: content.config.editorConfig.mode,
         },
       });
 
@@ -92,12 +93,20 @@ app.ontoolresult = async (result) => {
     content.config.type = "desktop";
   } else {
     content.config.type = deviceType();
+    if (
+      content.config.type === "desktop" &&
+      (content.config.document.permissions?.edit === false ||
+        content.config.editorConfig.mode === "view")
+    ) {
+      content.config.type = "embedded";
+    }
   }
 
   const docEditorClient = new DocEditorClient(
     app,
     EDITOR_CONTAINER_ID,
     content.documentServerBaseUrl,
+    content.sessionId,
   );
 
   log.info("Initializing DocEditorClient, sessionId:", content.sessionId);
@@ -265,5 +274,5 @@ const deviceType = () => {
   if (window.matchMedia("(pointer: coarse)").matches) {
     return "mobile";
   }
-  return "embedded";
+  return "desktop";
 };

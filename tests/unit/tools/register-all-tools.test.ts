@@ -17,7 +17,10 @@ describe("registerAllTools", () => {
 
     expect(registrations.map(([name]) => name)).toEqual([
       "open_file",
+      "save_file",
       "create_editor_config",
+      "poll_editor_commands",
+      "set_editor_command_result",
       "read_file_content",
     ]);
     for (const registration of registrations) {

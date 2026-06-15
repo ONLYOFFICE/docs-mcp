@@ -52,6 +52,10 @@ export async function createEditorConfig(
     },
   };
 
+  if ("_data_" === fileUrl) {
+    config.document.permissions.edit = false; // When opening on client-side, don`t work methods for saving file, so disable edit mode for local files.
+  }
+
   return {
     ...config,
     token: (deps.signJwt ?? jwt.sign)(

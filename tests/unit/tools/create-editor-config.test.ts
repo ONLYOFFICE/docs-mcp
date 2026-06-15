@@ -25,6 +25,7 @@ describe("create-editor-config", () => {
       sessionId: "session-1",
       fileName: "Report.docx",
       fileUrl: "https://files.example.com/Report.docx",
+      mode: "edit",
     });
 
     expect(configCalls).toEqual([
@@ -32,7 +33,7 @@ describe("create-editor-config", () => {
         sessionId: "session-1",
         fileName: "Report.docx",
         fileUrl: "https://files.example.com/Report.docx",
-        mode: "view",
+        mode: "edit",
       },
     ]);
     expect(result).toEqual({
@@ -43,7 +44,7 @@ describe("create-editor-config", () => {
         shardkey: "session-1",
         config: {
           document: { key: "session-1", title: "Report.docx" },
-          editorConfig: { mode: "view" },
+          editorConfig: { mode: "edit" },
         },
       },
     });

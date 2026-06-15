@@ -24,6 +24,7 @@ type CreateEditorConfigInput = {
   sessionId: string;
   fileName: string;
   fileUrl: string;
+  mode: "edit" | "view";
 };
 
 type CreateEditorConfigDeps = {
@@ -67,7 +68,12 @@ export function createCreateEditorConfigHandler(
   const validateDocumentFileUrl =
     deps.validateAllowedDocumentFileUrl ?? validateAllowedDocumentFileUrl;
 
-  return async ({ sessionId, fileName, fileUrl }: CreateEditorConfigInput) => {
+  return async ({
+    sessionId,
+    fileName,
+    fileUrl,
+    mode,
+  }: CreateEditorConfigInput) => {
     const isLocalFile = fileUrl.startsWith("file://");
 
     if (isLocalFile && getMode() !== "stdio") {
@@ -136,7 +142,7 @@ export function createCreateEditorConfigHandler(
       sessionId,
       fileName,
       fileUrl: isLocalFile ? "_data_" : fileUrl,
-      mode: "view",
+      mode,
     });
 
     return {
@@ -171,6 +177,12 @@ export const createEditorConfig: McpTool = {
             .url()
             .describe(
               "Document URL to open. Local file:// URLs are supported only with stdio transport.",
+            ),
+          mode: z
+            .enum(["edit", "view"])
+            .default("edit")
+            .describe(
+              "Editor mode: 'edit' to allow editing, 'view' for read-only.",
             ),
         },
         outputSchema: EditorConfigOutputSchema,
