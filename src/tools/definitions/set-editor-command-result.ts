@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { commandQueue } from "../../domain/editor-session/command-queue.js";
 import type { McpTool } from "../index.js";
+import { registerAppTool } from "@modelcontextprotocol/ext-apps/server";
 
 type SetEditorCommandResultInput = {
   sessionId: string;
@@ -33,7 +34,8 @@ export function createSetEditorCommandResultHandler(
 
 export const setEditorCommandResult: McpTool = {
   register(server: McpServer): void {
-    server.registerTool(
+    registerAppTool(
+      server,
       "set_editor_command_result",
       {
         description:
@@ -51,7 +53,7 @@ export const setEditorCommandResult: McpTool = {
               "Result data returned by the editor for the completed command.",
             ),
         },
-        _meta: { visibility: ["app"] },
+        _meta: { ui: { visibility: ["app"] } },
       },
       createSetEditorCommandResultHandler(),
     );

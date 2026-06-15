@@ -5,6 +5,7 @@ import {
   type Command,
 } from "../../domain/editor-session/command-queue.js";
 import type { McpTool } from "../index.js";
+import { registerAppTool } from "@modelcontextprotocol/ext-apps/server";
 
 type PollEditorCommandsInput = {
   sessionId: string;
@@ -29,7 +30,8 @@ export function createPollEditorCommandsHandler(
 
 export const pollEditorCommands: McpTool = {
   register(server: McpServer): void {
-    server.registerTool(
+    registerAppTool(
+      server,
       "poll_editor_commands",
       {
         description:
@@ -37,7 +39,7 @@ export const pollEditorCommands: McpTool = {
         inputSchema: {
           sessionId: z.string().describe("Session ID returned by open_file."),
         },
-        _meta: { visibility: ["app"] },
+        _meta: { ui: { visibility: ["app"] } },
       },
       createPollEditorCommandsHandler(),
     );

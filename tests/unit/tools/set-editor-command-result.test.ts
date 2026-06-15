@@ -80,7 +80,7 @@ describe("set-editor-command-result", () => {
           commandId: expect.anything(),
           result: expect.anything(),
         },
-        _meta: { visibility: ["app"] },
+        _meta: { ui: { visibility: ["app"] } },
       },
       expect.any(Function),
     ]);
