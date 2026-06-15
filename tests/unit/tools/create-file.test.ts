@@ -67,6 +67,14 @@ describe("create-file", () => {
         config: { document: { key: "session-1", title: "Deck.pptx" } },
       },
     });
+    await expect(
+      handler({ fileName: "Form", fileType: "pdf", locale: "ru-RU" }),
+    ).resolves.toMatchObject({
+      structuredContent: {
+        shardkey: "session-1",
+        config: { document: { key: "session-1", title: "Form.pdf" } },
+      },
+    });
     expect(calls).toEqual([
       {
         sessionId: "session-1",
@@ -88,6 +96,13 @@ describe("create-file", () => {
         fileUrl: expect.anything(),
         mode: "edit",
         locale: "fr-FR",
+      },
+      {
+        sessionId: "session-1",
+        fileName: "Form.pdf",
+        fileUrl: expect.anything(),
+        mode: "edit",
+        locale: "ru-RU",
       },
     ]);
   });

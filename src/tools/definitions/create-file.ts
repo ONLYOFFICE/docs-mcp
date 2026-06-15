@@ -7,7 +7,7 @@ import type { McpTool } from "../index.js";
 import { createEditorConfig } from "../../domain/document-server/editor-config.js";
 import { EditorConfigOutputSchema } from "./create-editor-config.js";
 
-const FILE_TYPES = ["docx", "xlsx", "pptx"] as const;
+const FILE_TYPES = ["docx", "xlsx", "pptx", "pdf"] as const;
 const fileTypeSchema = z.enum(FILE_TYPES);
 type FileType = z.infer<typeof fileTypeSchema>;
 
@@ -69,7 +69,7 @@ export const createFile: McpTool = {
       {
         title: "Create File",
         description:
-          "Create a new blank document, spreadsheet, or presentation and open it in the ONLYOFFICE Editor. Returns a sessionId required by save_file.",
+          "Create a new blank document, spreadsheet, presentation, or PDF and open it in the ONLYOFFICE Editor. Returns a sessionId required by save_file.",
         inputSchema: {
           fileName: z
             .string()
@@ -77,7 +77,7 @@ export const createFile: McpTool = {
               "Name for the new file, with or without extension (e.g. 'My Report').",
             ),
           fileType: fileTypeSchema.describe(
-            "Document type: 'docx' for text document, 'xlsx' for spreadsheet, 'pptx' for presentation.",
+            "Document type: 'docx' for text document, 'xlsx' for spreadsheet, 'pptx' for presentation, 'pdf' for PDF.",
           ),
           locale: z
             .string()

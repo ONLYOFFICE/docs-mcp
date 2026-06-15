@@ -188,7 +188,7 @@ saving files.
 
 | Tool | Purpose |
 | --- | --- |
-| `create_file` | Creates a blank DOCX, XLSX, or PPTX file and opens it for editing. |
+| `create_file` | Creates a blank DOCX, XLSX, PPTX, or PDF file and opens it for editing. |
 | `open_file` | Opens an existing file from a URL, uploaded file, or allowed local `file://` URL in stdio mode. |
 | `save_file` | Triggers download of the currently open document. |
 
