@@ -34,6 +34,10 @@ describe("save-file", () => {
           text: "Save command dispatched. Please check your browser's download folder.",
         },
       ],
+      structuredContent: {
+        message:
+          "Save command dispatched. Please check your browser's download folder.",
+      },
     });
   });
 
@@ -76,6 +80,9 @@ describe("save-file", () => {
         },
         inputSchema: {
           sessionId: expect.anything(),
+        },
+        outputSchema: {
+          message: expect.anything(),
         },
       },
       expect.any(Function),

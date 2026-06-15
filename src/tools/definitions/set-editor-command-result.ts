@@ -16,6 +16,15 @@ type SetEditorCommandResultDeps = {
   };
 };
 
+export const SetEditorCommandResultOutputSchema = {
+  status: z
+    .enum(["ok", "unknown_command_id"])
+    .describe("Result status for the command resolution."),
+  found: z
+    .boolean()
+    .describe("Whether the command ID matched a pending command."),
+};
+
 export function createSetEditorCommandResultHandler(
   deps: SetEditorCommandResultDeps = {},
 ) {
@@ -28,7 +37,13 @@ export function createSetEditorCommandResultHandler(
   }: SetEditorCommandResultInput) => {
     const found = queue.resolve(sessionId, commandId, result);
     const text = found ? "ok" : "unknown commandId";
-    return { content: [{ type: "text" as const, text }] };
+    return {
+      content: [{ type: "text" as const, text }],
+      structuredContent: {
+        status: found ? "ok" : "unknown_command_id",
+        found,
+      },
+    };
   };
 }
 
@@ -53,6 +68,7 @@ export const setEditorCommandResult: McpTool = {
               "Result data returned by the editor for the completed command.",
             ),
         },
+        outputSchema: SetEditorCommandResultOutputSchema,
         _meta: { ui: { visibility: ["app"] } },
       },
       createSetEditorCommandResultHandler(),

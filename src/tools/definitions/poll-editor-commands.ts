@@ -17,6 +17,18 @@ type PollEditorCommandsDeps = {
   };
 };
 
+export const PollEditorCommandsOutputSchema = {
+  commands: z
+    .array(
+      z.object({
+        id: z.string().describe("Command ID."),
+        type: z.literal("saveFile").describe("Command type."),
+        payload: z.unknown().optional().describe("Optional command payload."),
+      }),
+    )
+    .describe("Commands pending for the editor client."),
+};
+
 export function createPollEditorCommandsHandler(
   deps: PollEditorCommandsDeps = {},
 ) {
@@ -39,6 +51,7 @@ export const pollEditorCommands: McpTool = {
         inputSchema: {
           sessionId: z.string().describe("Session ID returned by open_file."),
         },
+        outputSchema: PollEditorCommandsOutputSchema,
         _meta: { ui: { visibility: ["app"] } },
       },
       createPollEditorCommandsHandler(),

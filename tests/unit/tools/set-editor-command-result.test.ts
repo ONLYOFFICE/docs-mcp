@@ -34,7 +34,13 @@ describe("set-editor-command-result", () => {
         data: { tools: ["insertText"] },
       },
     ]);
-    expect(result).toEqual({ content: [{ type: "text", text: "ok" }] });
+    expect(result).toEqual({
+      content: [{ type: "text", text: "ok" }],
+      structuredContent: {
+        status: "ok",
+        found: true,
+      },
+    });
   });
 
   test("reports unknown command IDs", async () => {
@@ -56,6 +62,10 @@ describe("set-editor-command-result", () => {
       }),
     ).resolves.toEqual({
       content: [{ type: "text", text: "unknown commandId" }],
+      structuredContent: {
+        status: "unknown_command_id",
+        found: false,
+      },
     });
   });
 
@@ -79,6 +89,10 @@ describe("set-editor-command-result", () => {
           sessionId: expect.anything(),
           commandId: expect.anything(),
           result: expect.anything(),
+        },
+        outputSchema: {
+          status: expect.anything(),
+          found: expect.anything(),
         },
         _meta: { ui: { visibility: ["app"] } },
       },

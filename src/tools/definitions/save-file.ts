@@ -18,6 +18,15 @@ type SaveFileDeps = {
   randomUUID?: () => string;
 };
 
+const SaveFileMessage =
+  "Save command dispatched. Please check your browser's download folder.";
+
+export const SaveFileOutputSchema = {
+  message: z
+    .string()
+    .describe("Human-readable result of the save-file command."),
+};
+
 export function createSaveFileHandler(deps: SaveFileDeps = {}) {
   const queue = deps.commandQueue ?? commandQueue;
   const randomUUID = deps.randomUUID ?? crypto.randomUUID.bind(crypto);
@@ -33,9 +42,12 @@ export function createSaveFileHandler(deps: SaveFileDeps = {}) {
       content: [
         {
           type: "text" as const,
-          text: "Save command dispatched. Please check your browser's download folder.",
+          text: SaveFileMessage,
         },
       ],
+      structuredContent: {
+        message: SaveFileMessage,
+      },
     };
   };
 }
@@ -56,6 +68,7 @@ export const saveFile: McpTool = {
         inputSchema: {
           sessionId: z.string().describe("Session ID returned by open_file."),
         },
+        outputSchema: SaveFileOutputSchema,
       },
       createSaveFileHandler(),
     );

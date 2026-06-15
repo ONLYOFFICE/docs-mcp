@@ -52,6 +52,9 @@ describe("poll-editor-commands", () => {
         inputSchema: {
           sessionId: expect.anything(),
         },
+        outputSchema: {
+          commands: expect.anything(),
+        },
         _meta: { ui: { visibility: ["app"] } },
       },
       expect.any(Function),
