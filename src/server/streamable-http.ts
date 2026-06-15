@@ -20,6 +20,9 @@ type HealthCheckResult = {
   timestamp: string;
 };
 
+const ONLYOFFICE_REGISTRATION_URL =
+  "https://www.onlyoffice.com/docs-registration?referer=docs-mcp";
+
 function createCorsOptions(): CorsOptions {
   if (CONFIG.HTTP_CORS_ALLOWED_ORIGINS.length === 0) {
     return {
@@ -47,20 +50,32 @@ function handleHealthCheck(_req: Request, res: Response): void {
   res.status(200).json(result);
 }
 
+function handleOnlyofficeRedirect(_req: Request, res: Response): void {
+  res.redirect(302, ONLYOFFICE_REGISTRATION_URL);
+}
+
 export async function startStreamableHTTPServer(
   createServer: () => McpServer,
   options: StreamableHTTPServerOptions,
 ): Promise<void> {
+  const publicUrlHostname = CONFIG.HTTP_PUBLIC_URL
+    ? new URL(CONFIG.HTTP_PUBLIC_URL).hostname
+    : undefined;
+
+  const allowedHosts = [
+    ...CONFIG.HTTP_ALLOWED_HOSTS,
+    ...(publicUrlHostname ? [publicUrlHostname] : []),
+  ];
+
   const app = createMcpExpressApp({
     host: options.host,
     allowedHosts:
-      CONFIG.HTTP_ALLOWED_HOSTS.length > 0
-        ? [...new Set(CONFIG.HTTP_ALLOWED_HOSTS)]
-        : undefined,
+      allowedHosts.length > 0 ? [...new Set(allowedHosts)] : undefined,
   });
   app.set("trust proxy", CONFIG.HTTP_TRUST_PROXY);
   app.use(cors(createCorsOptions()));
   app.get("/health", handleHealthCheck);
+  app.get("/registration", handleOnlyofficeRedirect);
   app.use(
     createHttpRateLimitMiddleware({
       windowMs: CONFIG.HTTP_RATE_LIMIT_WINDOW_MS,

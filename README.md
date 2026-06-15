@@ -256,7 +256,8 @@ These variables apply only when the server is started with `--http`.
 
 | Environment variable | Required | Default | Description |
 | --- | --- | --- | --- |
-| `HTTP_ALLOWED_HOSTS` | No | `<empty>` | Additional hostnames accepted by the Streamable HTTP server. `localhost`, `127.0.0.1`, `[::1]`, and the configured `--host` value are always allowed. |
+| `HTTP_PUBLIC_URL` | No | `<empty>` | Public URL where the HTTP server is accessible (e.g., `https://myserver.example.com`). When set, its hostname is added to the allowed hosts and the URL is used as the widget `domain` for UI sandboxing. |
+| `HTTP_ALLOWED_HOSTS` | No | `<empty>` | Additional hostnames accepted in the HTTP `Host` header. When set alongside `HTTP_PUBLIC_URL`, both are merged into the allowlist. When set without `HTTP_PUBLIC_URL`, replaces the default allowlist entirely — include all required hostnames. |
 | `HTTP_TRUST_PROXY` | No | `false` | Express `trust proxy` setting. Accepts `false`, `true`, a non-negative integer, or a custom trust proxy value. |
 | `HTTP_CORS_ALLOWED_ORIGINS` | No | `<empty>` | Browser origins allowed by CORS. Use `*` to allow any origin. Requests without an `Origin` header are allowed. |
 | `HTTP_RATE_LIMIT_WINDOW_MS` | No | `60000` | HTTP rate limit window in milliseconds. |

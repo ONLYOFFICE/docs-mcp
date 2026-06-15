@@ -33,6 +33,14 @@ type ToolResultContent = {
   fileUrl: string | undefined;
 };
 
+declare global {
+  interface Window {
+    openai?: {
+      setOpenInAppUrl?: (options: { href: string }) => void;
+    };
+  }
+}
+
 app.ontoolresult = async (result) => {
   log.info("Tool result received (ontoolresult)");
 
@@ -162,6 +170,7 @@ app.connect().then(() => {
       "Ask the AI assistant to open a file in ONLYOFFICE to get started.",
     );
   }, TOOL_RESULT_TIMEOUT_MS);
+  window.openai?.setOpenInAppUrl?.({ href: "/onlyoffice" });
 });
 
 const showLoading = (message: string): void => {
