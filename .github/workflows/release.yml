@@ -24,8 +24,6 @@ jobs:
     
     - name: Install pnpm
       uses: pnpm/action-setup@v6
-      with:
-        version: 10
 
     - name: Store Version
       id: version
@@ -66,8 +64,6 @@ jobs:
     
     - name: Install pnpm
       uses: pnpm/action-setup@v6
-      with:
-        version: 10
 
     - name: Download Package
       uses: actions/download-artifact@v8
