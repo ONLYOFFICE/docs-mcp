@@ -14,6 +14,7 @@ jobs:
     env:
       DOCKERHUB_NAMESPACE: onlyoffice
       DOCKERHUB_REPOSITORY: docs-mcp
+      DOCKER_IMAGE_PREFIX: 4testing
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v6
@@ -70,7 +71,7 @@ jobs:
         push: true
         platforms: linux/amd64,linux/arm64
         labels: ${{steps.labels.outputs.labels}}
-        tags: index.docker.io/${{env.DOCKERHUB_NAMESPACE}}/${{env.DOCKERHUB_REPOSITORY}}:${{env.RC_TAG}}
+        tags: index.docker.io/${{env.DOCKERHUB_NAMESPACE}}/${{env.DOCKER_IMAGE_PREFIX}}-${{env.DOCKERHUB_REPOSITORY}}:${{env.RC_TAG}}
 
   update:
     name: Update Connector
