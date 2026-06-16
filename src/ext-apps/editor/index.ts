@@ -170,7 +170,7 @@ app.connect().then(() => {
       "Ask the AI assistant to open a file in ONLYOFFICE to get started.",
     );
   }, TOOL_RESULT_TIMEOUT_MS);
-  window.openai?.setOpenInAppUrl?.({ href: "/onlyoffice" });
+  window.openai?.setOpenInAppUrl?.({ href: "/registration" });
 });
 
 const showLoading = (message: string): void => {
