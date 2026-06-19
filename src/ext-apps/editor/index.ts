@@ -18,12 +18,9 @@ const log = {
   error: console.error.bind(console, "[ONLYOFFICE-EDITOR]"),
 };
 
-const TOOL_RESULT_TIMEOUT_MS = 10_000;
 const CONFIG_TOKEN_EXPIRATION_THRESHOLD_MS = 10_000;
 const INLINE_EDITOR_HEIGHT = 600;
 const EDITOR_CONTAINER_ID = "editor";
-
-let toolResultTimer: ReturnType<typeof setTimeout> | null = null;
 
 type ToolResultContent = {
   sessionId: string;
@@ -43,11 +40,6 @@ declare global {
 
 app.ontoolresult = async (result) => {
   log.info("Tool result received (ontoolresult)");
-
-  if (toolResultTimer !== null) {
-    clearTimeout(toolResultTimer);
-    toolResultTimer = null;
-  }
 
   showLoading("Waiting loading ONLYOFFICE Editor...");
 
@@ -160,16 +152,6 @@ app.connect().then(() => {
 
   showLoading("Waiting tool response...");
 
-  toolResultTimer = setTimeout(() => {
-    toolResultTimer = null;
-    log.info(
-      `Tool result timeout (ontoolresult) — no result received within ${TOOL_RESULT_TIMEOUT_MS / 1000} s`,
-    );
-    showMessageScreen(
-      "No response received",
-      "Ask the AI assistant to open a file in ONLYOFFICE to get started.",
-    );
-  }, TOOL_RESULT_TIMEOUT_MS);
   window.openai?.setOpenInAppUrl?.({ href: "/registration" });
 });
 
